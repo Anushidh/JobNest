@@ -382,4 +382,30 @@ export class ApplicantService implements IApplicantService {
 
     return updatedApplicant;
   }
+
+  async getAllApplicants(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    applicants: IApplicant[];
+    total: number;
+    pages: number;
+    currentPage: number;
+  }> {
+    return this.applicantRepository.findAllApplicants(page, limit);
+  }
+
+  async toggleBlockStatus(id: string): Promise<IApplicant | null> {
+    const applicant = await this.applicantRepository.findById(id);
+
+    if (!applicant) {
+      throw new Error("Applicant not found");
+    }
+
+    applicant.isBlocked = !applicant.isBlocked;
+
+    await this.applicantRepository.updateApplicant(applicant);
+
+    return applicant;
+  }
 }

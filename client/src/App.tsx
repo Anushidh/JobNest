@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router";
+
 import Applicant from "./routes/ApplicantRoutes";
 import Employer from "./routes/EmployerRoutes";
 import Admin from "./routes/AdminRoutes";

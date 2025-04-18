@@ -11,6 +11,7 @@ import "../controllers/employer.controller";
 import "../controllers/job.controller";
 import "../controllers/applicant.controller";
 import "../controllers/plan.controller";
+import "../controllers/admin.controller";
 // import "../controllers/payment.controller";
 
 export class App {

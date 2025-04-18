@@ -63,4 +63,48 @@ export class EmployerRepository implements IEmployerRepository {
       this.handleDatabaseError(error);
     }
   }
+
+  async findAllEmployers(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    employers: IEmployer[];
+    total: number;
+    pages: number;
+    currentPage: number;
+  }> {
+    try {
+      const skip = (page - 1) * limit;
+
+      const [employers, total] = await Promise.all([
+        Employer.find()
+          .select(
+            "-password -googleId -refreshToken -resetPasswordToken -resetPasswordExpires -__v"
+          )
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Employer.countDocuments(),
+      ]);
+
+      return {
+        employers,
+        total,
+        pages: Math.ceil(total / limit),
+        currentPage: page,
+      };
+    } catch (error) {
+      this.handleDatabaseError(error);
+    }
+  }
+
+  async updateEmployer(employer: IEmployer): Promise<IEmployer | null> {
+    try {
+      return await Employer.findByIdAndUpdate(employer._id, employer, {
+        new: true,
+      });
+    } catch (error) {
+      this.handleDatabaseError(error);
+    }
+  }
 }

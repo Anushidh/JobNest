@@ -1,7 +1,7 @@
 import { Employer } from "./employerTypes";
 
 export interface Applicant {
-  _id: string; 
+  _id: string;
   email: string;
   password?: string;
   googleId?: string;
@@ -20,6 +20,8 @@ export interface Applicant {
   refreshToken?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date | null;
+  plan: string;
+  planExpiresAt?: Date | null;
 }
 
 export interface Job {

@@ -78,7 +78,10 @@ export class ApplicantRepository implements IApplicantRepository {
     }
   }
 
-  async updateById(applicantId: string, updateData: Partial<IApplicant>): Promise<IApplicant | null> {
+  async updateById(
+    applicantId: string,
+    updateData: Partial<IApplicant>
+  ): Promise<IApplicant | null> {
     try {
       const updatedApplicant = await Applicant.findByIdAndUpdate(
         applicantId,
@@ -97,5 +100,35 @@ export class ApplicantRepository implements IApplicantRepository {
     } catch (error) {
       this.handleDatabaseError(error);
     }
+  }
+
+  async findAllApplicants(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    applicants: IApplicant[];
+    total: number;
+    pages: number;
+    currentPage: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const [applicants, total] = await Promise.all([
+      Applicant.find()
+        .select(
+          "-password -googleId -refreshToken -resetPasswordToken -resetPasswordExpires -__v"
+        )
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Applicant.countDocuments(),
+    ]);
+
+    return {
+      applicants,
+      total,
+      pages: Math.ceil(total / limit),
+      currentPage: page,
+    };
   }
 }

@@ -40,11 +40,6 @@ export interface IApplicantService {
 
   getApplicantById(applicantId: string): Promise<IApplicant | null>;
 
-  updateById(
-    applicantId: string,
-    updateData: Partial<IApplicant>
-  ): Promise<IApplicant | null>;
-
   unsaveJobForApplicant(
     applicantId: string,
     jobId: string

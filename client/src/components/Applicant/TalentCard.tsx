@@ -1,6 +1,6 @@
 import { Briefcase, GraduationCap, Upload } from "lucide-react";
 import { Link } from "react-router";
-import React from "react";
+import React, { useRef } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 
@@ -9,8 +9,10 @@ const TalentCard: React.FC = () => {
   const applicant = useSelector(
     (state: RootState) => state.applicant.applicant
   );
-console.log(applicant)
-  if (!applicant) return null; 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  console.log(applicant);
+  if (!applicant) return null;
 
   const { name, profilePicture, resume, experience, education, skills } =
     applicant;
@@ -22,22 +24,24 @@ console.log(applicant)
     lead: "Lead Level",
   };
 
-  
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-  
-      const formData = new FormData();
-      formData.append("logo", file);
-  
-     
-        const response = await uploadProfilePicture(formData).unwrap();
-        const updatedLogo = response?.user?.companyLogo;
-        if (updatedLogo) {
-          setLogoUrl(updatedLogo);
-        }
-      } 
-    };
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("logo", file);
+
+    try {
+      // Assuming you have an uploadProfilePicture function
+      // const response = await uploadProfilePicture(formData).unwrap();
+      // const updatedLogo = response?.user?.companyLogo;
+      // if (updatedLogo) {
+      //   setLogoUrl(updatedLogo);
+      // }
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+    }
+  };
 
   return (
     <div className="bg-gray-50 p-4 rounded border border-dashed border-gray-300 text-sm text-gray-700 space-y-3">
@@ -59,10 +63,10 @@ console.log(applicant)
 
       {/* Profile */}
       <div className="flex items-center gap-4">
-      <div className="relative flex-shrink-0 group mr-4">
+        <div className="relative flex-shrink-0 group mr-4">
           <img
             src={profilePicture || "https://via.placeholder.com/150"}
-            alt="Company Logo"
+            alt="Profile Picture"
             className="w-20 h-20 object-contain rounded"
           />
           <input
@@ -79,6 +83,7 @@ console.log(applicant)
             onClick={() => fileInputRef.current?.click()}
           />
         </div>
+        <div>
           <div className="font-medium">{name}</div>
           {resume && (
             <a
@@ -114,7 +119,7 @@ console.log(applicant)
       )}
 
       {/* Skills */}
-      {skills.length > 0 && (
+      {skills && skills.length > 0 && (
         <div className="pt-2">
           <span className="font-semibold text-sm">Skills:</span>
           <div className="flex flex-wrap gap-2 mt-1 text-xs">

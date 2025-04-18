@@ -6,7 +6,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { FcGoogle } from "react-icons/fc";
 import { ImSpinner8 } from "react-icons/im";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";

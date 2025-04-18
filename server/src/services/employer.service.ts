@@ -307,4 +307,30 @@ export class EmployerService implements IEmployerService {
 
     return updatedEmployer;
   }
+
+  async getAllEmployers(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    employers: IEmployer[];
+    total: number;
+    pages: number;
+    currentPage: number;
+  }> {
+    return this.employerRepository.findAllEmployers(page, limit);
+  }
+
+  async toggleBlockStatus(id: string): Promise<IEmployer | null> {
+    const employer = await this.employerRepository.findById(id);
+
+    if (!employer) {
+      throw new Error("Employer not found");
+    }
+
+    employer.isBlocked = !employer.isBlocked;
+
+    await this.employerRepository.updateEmployer(employer);
+
+    return employer;
+  }
 }

@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Admin } from "../../types/adminTypes";
 
 interface AdminState {
-  admin: { id: string; name: string; email: string } | null;
+  admin: Admin | null;
   accessToken: string | null;
   role: string | null;
 }
@@ -18,7 +19,7 @@ const adminSlice = createSlice({
   reducers: {
     setAdminCredentials: (
       state,
-      action: PayloadAction<{ admin: any; accessToken: string; role: string }>
+      action: PayloadAction<{ admin: Admin; accessToken: string; role: string }>
     ) => {
       state.admin = action.payload.admin;
       state.accessToken = action.payload.accessToken;

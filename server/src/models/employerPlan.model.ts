@@ -7,8 +7,6 @@ export interface IEmployerPlan extends Document {
   credits: number;
   price: number;
   durationInDays: number;
-
-  // ✅ Additional features
   prioritySupport: boolean;
   featuredJobSlots: number;
   analyticsAccess: boolean;
