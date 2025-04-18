@@ -1,0 +1,11 @@
+export { default as ApplicantSignup } from "./ApplicantSignup";
+export { default as ApplicantSignin } from "./ApplicantSignin";
+export { default as Home } from "./Home";
+export { default as JobLayout } from "./JobLayout";
+export { default as SavedJobs } from "./SavedJobs";
+export { default as Dashboard } from "./Dashboard";
+export { default as AllJobs } from "./AllJobs";
+export { default as Plans } from "./Plans";
+export { default as OtpForm } from "./OtpForm";
+export { default as JobDetail } from "./JobDetail";
+export { default as EditApplicantProfile } from "./EditApplicantProfile";
