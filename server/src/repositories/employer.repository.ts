@@ -29,7 +29,7 @@ export class EmployerRepository implements IEmployerRepository {
 
   async findById(providerId: string): Promise<IEmployer | null> {
     try {
-      return await Employer.findById(providerId);
+      return await Employer.findById(providerId).populate('plan');
     } catch (error) {
       this.handleDatabaseError(error);
     }

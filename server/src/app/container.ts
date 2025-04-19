@@ -10,6 +10,7 @@ import { PlanService } from "../services/plan.service";
 import { EmployerPlanRepository } from "../repositories/employer-plan.repository";
 import { AdminService } from "../services/admin.service";
 import { AdminRepository } from "../repositories/admin.repository";
+import { ApplicantPlanRepository } from "../repositories/applicant-plan.repository";
 // import { PaymentRepository } from "../repositories/payment.repository";
 // import { PaymentService } from "../services/payment.service";
 
@@ -28,6 +29,9 @@ container
 container
   .bind<EmployerPlanRepository>(TYPES.EmployerPlanRepository)
   .to(EmployerPlanRepository);
+container
+  .bind<ApplicantPlanRepository>(TYPES.ApplicantPlanRepository)
+  .to(ApplicantPlanRepository);
 container.bind<AdminRepository>(TYPES.AdminRepository).to(AdminRepository);
 // container
 //   .bind<PaymentRepository>(TYPES.PaymentRepository)

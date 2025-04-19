@@ -4,6 +4,7 @@ import {
   Users,
   Settings,
   FileText,
+  CreditCard,
   Menu,
   X,
 } from "lucide-react";
@@ -31,6 +32,16 @@ const AdminSidebar = () => {
       path: "/admin/jobs",
       icon: <FileText className="w-5 h-5" />,
       label: "Jobs",
+    },
+    {
+      path: "/admin/employer-plans",
+      icon: <CreditCard className="w-5 h-5" />,
+      label: "Employer Plans",
+    },
+    {
+      path: "/admin/applicant-plans",
+      icon: <CreditCard className="w-5 h-5" />,
+      label: "Applicant Plans",
     },
     {
       path: "/admin/settings",

@@ -17,20 +17,20 @@ export interface Employer {
   companyCulture?: string;
   missionStatement?: string;
   benefits?: string[];
-  postedJobs: string[]; // or Schema.Types.ObjectId[] if you prefer
+  postedJobs: string[];
   role: "employer";
   isVerified: boolean;
   isBlocked: boolean;
   refreshToken?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  plan?: string; // or Schema.Types.ObjectId if you prefer
+  plan?: string;
   planExpiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface IEmployerPlan {
+export interface EmployerPlan {
   _id: string;
   name: "normal" | "standard" | "premium";
   jobPostLimit: number;
@@ -46,4 +46,6 @@ export interface IEmployerPlan {
   candidateInsights: boolean;
   canDownloadResumes: boolean;
   planDescription?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

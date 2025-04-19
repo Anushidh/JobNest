@@ -24,6 +24,19 @@ export interface Applicant {
   planExpiresAt?: Date | null;
 }
 
+export interface ApplicantPlan {
+  _id: string;
+  name: "normal" | "standard" | "premium";
+  jobApplyLimit: number;
+  canAccessChat: boolean;
+  credits: number;
+  price: number;
+  durationInDays: number;
+  planDescription?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Job {
   _id: string;
   title: string;

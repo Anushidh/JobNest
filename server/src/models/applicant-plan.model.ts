@@ -1,15 +1,19 @@
 import mongoose, { Schema, Document, model } from "mongoose";
 
-export interface IJobSeekerPlan extends Document {
+export interface IApplicantPlan extends Document {
+  _id: mongoose.Types.ObjectId;
   name: "normal" | "standard" | "premium";
   jobApplyLimit: number;
   canAccessChat: boolean;
   credits: number;
   price: number;
   durationInDays: number;
+  planDescription?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const jobSeekerPlanSchema = new Schema<IJobSeekerPlan>(
+const applicantPlanSchema = new Schema<IApplicantPlan>(
   {
     name: {
       type: String,
@@ -37,8 +41,13 @@ const jobSeekerPlanSchema = new Schema<IJobSeekerPlan>(
       type: Number,
       required: true,
     },
+    planDescription: {
+      type: String,
+      required: false,
+      default: "",
+    },
   },
   { timestamps: true }
 );
 
-export default model<IJobSeekerPlan>("JobSeekerPlan", jobSeekerPlanSchema);
+export default model<IApplicantPlan>("ApplicantPlan", applicantPlanSchema);

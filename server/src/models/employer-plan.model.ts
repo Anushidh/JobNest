@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, model, Model } from "mongoose";
 
 export interface IEmployerPlan extends Document {
+  _id: mongoose.Types.ObjectId;
   name: "normal" | "standard" | "premium";
   jobPostLimit: number;
   canViewApplicants: boolean;
@@ -15,6 +16,8 @@ export interface IEmployerPlan extends Document {
   candidateInsights: boolean;
   canDownloadResumes: boolean;
   planDescription?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const employerPlanSchema = new Schema<IEmployerPlan>(

@@ -68,6 +68,7 @@ export const adminApi = baseApi.injectEndpoints({
         method: "PATCH",
       }),
     }),
+
     adminRefreshToken: builder.mutation({
       query: () => ({
         url: "/admin/refresh",

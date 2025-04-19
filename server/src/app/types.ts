@@ -6,6 +6,7 @@ const TYPES = {
   ApplicantRepository: Symbol.for("ApplicantRepository"),
   ApplicantService: Symbol.for("ApplicantService"),
   EmployerPlanRepository: Symbol.for("EmployerPlanRepository"),
+  ApplicantPlanRepository: Symbol.for("ApplicantPlanRepository"),
   PlanService: Symbol.for("PlanService"),
   PaymentService: Symbol.for("PaymentService"),
   PaymentRepository: Symbol.for("PaymentRepository"),
