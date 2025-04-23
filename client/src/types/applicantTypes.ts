@@ -53,6 +53,7 @@ export interface Job {
   skillsRequired: string[];
   experienceLevel: "entry" | "mid" | "senior" | "lead";
   educationRequirements?: string[];
+  responsibilities: string[];
   applications: string[];
   status: "active" | "paused" | "closed";
   deadline?: string; // ISO string from backend

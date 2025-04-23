@@ -37,28 +37,16 @@ const EmployerSignIn = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    try {
-      const result = await login(data).unwrap();
-      dispatch(
-        setEmployerCredentials({
-          employer: result.user,
-          accessToken: result.accessToken,
-          role: result.role,
-        })
-      );
-      toast.success("Login successful!");
-      navigate("/employer/dashboard");
-    } catch (error: unknown) {
-      let errorMessage = "Invalid credentials.";
-      if (typeof error === "object" && error !== null && "status" in error) {
-        const err = error as FetchBaseQueryError;
-        if ("data" in err) {
-          errorMessage =
-            (err.data as { message?: string }).message || errorMessage;
-        }
-      }
-      toast.error(errorMessage);
-    }
+    const result = await login(data).unwrap();
+    dispatch(
+      setEmployerCredentials({
+        employer: result.user,
+        accessToken: result.accessToken,
+        role: result.role,
+      })
+    );
+    toast.success("Login successful!");
+    navigate("/employer/dashboard");
   };
 
   const handleGoogleSuccess = async (response: CredentialResponse) => {

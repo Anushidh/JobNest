@@ -1,6 +1,5 @@
 import { inject, injectable } from "inversify";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 
 import redisClient from "../config/redis.config";
 import { EmployerRepository } from "../repositories/employer.repository";
@@ -14,7 +13,7 @@ import {
   verifyRefreshToken,
 } from "../utils/token.util";
 import { IEmployerService } from "./interfaces/IEmployerService";
-import { IEmployer } from "../models/employer.model";
+import { IEmployer, IEmployerWithPlan } from "../models/employer.model";
 
 @injectable()
 export class EmployerService implements IEmployerService {
@@ -42,6 +41,7 @@ export class EmployerService implements IEmployerService {
     }
 
     const otp = await generateOTP(employerData.email);
+    console.log('otp', otp)
     if (!otp) {
       throw new AppError("Failed to generate OTP", 500);
     }
@@ -85,6 +85,7 @@ export class EmployerService implements IEmployerService {
       ...employerData,
       role: "employer",
       isVerified: true,
+      jobPostsLeft: 5,
     });
 
     // 4. Cleanup Redis
@@ -97,11 +98,12 @@ export class EmployerService implements IEmployerService {
     email: string,
     password: string
   ): Promise<{
-    employer: Omit<IEmployer, "password">;
+    employer: Omit<IEmployerWithPlan, "password">;
     accessToken: string;
     refreshToken: string;
   }> {
     const employer = await this.employerRepository.findByEmail(email);
+    console.log(employer)
 
     if (!employer) {
       throw new AppError("Account not found.", 401);
@@ -320,7 +322,11 @@ export class EmployerService implements IEmployerService {
     return this.employerRepository.findAllEmployers(page, limit);
   }
 
-  async toggleBlockStatus(id: string): Promise<IEmployer | null> {
+async getEmployer(id: string): Promise<IEmployerWithPlan | null> {
+  return this.employerRepository.findById(id)
+}
+
+  async toggleBlockStatus(id: string): Promise<IEmployerWithPlan | null> {
     const employer = await this.employerRepository.findById(id);
 
     if (!employer) {

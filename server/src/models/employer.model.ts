@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Model, model } from "mongoose";
+import { IEmployerPlan } from "./employer-plan.model";
 
 export interface IEmployer extends Document {
   _id: mongoose.Types.ObjectId;
@@ -15,20 +16,25 @@ export interface IEmployer extends Document {
   headquarters?: string;
   foundedYear?: number;
   linkedin?: string;
-  postedJobs: mongoose.Types.ObjectId[];
+  companyTagline?: string;
+  companyCulture?: string;
+  missionStatement?: string;
   role: "employer";
   isVerified: boolean;
   isBlocked: boolean;
+  isHighlighted: boolean;
   refreshToken?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   plan?: mongoose.Types.ObjectId;
   planExpiresAt?: Date;
+  jobPostsLeft: number | "unlimited";
   createdAt: Date;
   updatedAt: Date;
-  companyTagline?: string;
-  companyCulture?: string;
-  missionStatement?: string;
+}
+
+export interface IEmployerWithPlan extends Omit<IEmployer, "plan"> {
+  plan?: IEmployerPlan | mongoose.Types.ObjectId;
 }
 
 const employerSchema: Schema<IEmployer> = new Schema(
@@ -86,12 +92,6 @@ const employerSchema: Schema<IEmployer> = new Schema(
     missionStatement: {
       type: String,
     },
-    postedJobs: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Job",
-      },
-    ],
     role: {
       type: String,
       default: "employer",
@@ -100,6 +100,10 @@ const employerSchema: Schema<IEmployer> = new Schema(
     },
     isVerified: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
+    isHighlighted: {
+      type: Boolean,
+      default: false,
+    },
     refreshToken: { type: String },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
@@ -110,9 +114,35 @@ const employerSchema: Schema<IEmployer> = new Schema(
     planExpiresAt: {
       type: Date,
     },
+    jobPostsLeft: {
+      type: Schema.Types.Mixed, // number or 'unlimited'
+    },
   },
   { timestamps: true }
 );
+
+employerSchema.pre<IEmployer>("save", async function (next) {
+  if (!this.plan) {
+    try {
+      const basicPlan = await mongoose
+        .model("EmployerPlan")
+        .findOne({ name: "basic" });
+
+      if (basicPlan) {
+        this.plan = basicPlan._id;
+        this.jobPostsLeft = basicPlan.features.jobLimit;
+      } else {
+        console.warn("⚠️ No default 'basic' plan found in the database.");
+      }
+
+      next();
+    } catch (error) {
+      next(error as Error);
+    }
+  } else {
+    next();
+  }
+});
 
 const Employer: Model<IEmployer> = model<IEmployer>("Employer", employerSchema);
 

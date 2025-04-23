@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 
@@ -16,10 +15,11 @@ const PostedJobs = () => {
     isLoading,
     isError,
     error,
+    refetch
   } = useGetEmployerJobsQuery();
   const [deleteJob] = useDeleteJobMutation();
   const MySwal = withReactContent(Swal);
-  
+
   const handleDelete = async (jobId: string) => {
     const result = await MySwal.fire({
       title: "Are you sure?",
@@ -32,28 +32,9 @@ const PostedJobs = () => {
     });
 
     if (result.isConfirmed) {
-      try {
-        await deleteJob(jobId).unwrap();
-        toast.success("Job deleted successfully");
-        // Optionally, refetch or update local state here
-      } catch (error: unknown) {
-        let errorMessage = "Something went wrong.";
-
-        if (typeof error === "object" && error !== null && "status" in error) {
-          const err = error as FetchBaseQueryError;
-
-          if ("data" in err) {
-            if (typeof err.data === "string") {
-              errorMessage = err.data;
-            } else if (typeof err.data === "object" && err.data !== null) {
-              errorMessage =
-                (err.data as { message?: string }).message || errorMessage;
-            }
-          }
-        }
-
-        toast.error(errorMessage);
-      }
+      await deleteJob(jobId).unwrap();
+      toast.success("Job deleted successfully");
+      refetch()
     }
   };
 

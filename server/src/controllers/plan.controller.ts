@@ -7,9 +7,12 @@ import {
   httpPatch,
 } from "inversify-express-utils";
 import { inject } from "inversify";
+
 import { TYPES } from "../app/types";
 import { PlanService } from "../services/plan.service";
 import { adminAuthMiddleware } from "../middlewares/admin-auth.middleware";
+import { employerAuthMiddleware } from "../middlewares/employer-auth.middleware";
+import { applicantAuthMiddleware } from "../middlewares/applicant-auth.middleware";
 
 @controller("/plans")
 export class PlanController extends BaseHttpController {
@@ -17,7 +20,7 @@ export class PlanController extends BaseHttpController {
     super();
   }
 
-  @httpGet("/employer", adminAuthMiddleware)
+  @httpGet("/admin/employer", adminAuthMiddleware)
   async getAllEmployerPlans(req: Request, res: Response): Promise<void> {
     console.log("Fetching all employer plans...");
     const plans = await this.planService.getAllEmployerPlans();
@@ -25,7 +28,15 @@ export class PlanController extends BaseHttpController {
     res.status(200).json({ plans });
   }
 
-  @httpGet("/employer/:id", adminAuthMiddleware)
+  @httpGet("/employer", employerAuthMiddleware)
+  async getEmployerPlans(req: Request, res: Response): Promise<void> {
+    console.log("Fetching all employer plans...");
+    const plans = await this.planService.getAllEmployerPlans();
+    console.log(plans);
+    res.status(200).json({ plans });
+  }
+
+  @httpGet("/admin/employer/:id", adminAuthMiddleware)
   async getEmployerPlanById(req: Request, res: Response): Promise<void> {
     const planId = req.params.id;
     console.log(`Fetching employer plan with ID: ${planId}`);
@@ -39,7 +50,7 @@ export class PlanController extends BaseHttpController {
   }
 
   // Create new employer plan
-  @httpPost("/employer", adminAuthMiddleware)
+  @httpPost("/admin/employer", adminAuthMiddleware)
   async createEmployerPlan(req: Request, res: Response): Promise<void> {
     const planData = req.body;
     console.log("Creating a new employer plan:", planData);
@@ -48,7 +59,7 @@ export class PlanController extends BaseHttpController {
   }
 
   // Update employer plan
-  @httpPatch("/employer/:id", adminAuthMiddleware)
+  @httpPatch("/admin/employer/:id", adminAuthMiddleware)
   async updateEmployerPlan(req: Request, res: Response): Promise<void> {
     const planId = req.params.id;
     const planData = req.body;
@@ -65,7 +76,7 @@ export class PlanController extends BaseHttpController {
     }
   }
 
-  @httpGet("/applicant", adminAuthMiddleware)
+  @httpGet("/admin/applicant", adminAuthMiddleware)
   async getAllApplicantPlans(req: Request, res: Response): Promise<void> {
     console.log("Fetching all applicant plans...");
     const plans = await this.planService.getAllApplicantPlans();
@@ -73,7 +84,15 @@ export class PlanController extends BaseHttpController {
     res.status(200).json({ plans });
   }
 
-  @httpGet("/applicant/:id", adminAuthMiddleware)
+  @httpGet("/applicant", applicantAuthMiddleware)
+  async getApplicantPlans(req: Request, res: Response): Promise<void> {
+    console.log("Fetching all applicant plans...");
+    const plans = await this.planService.getAllApplicantPlans();
+    console.log(plans);
+    res.status(200).json({ plans });
+  }
+
+  @httpGet("/admin/applicant/:id", adminAuthMiddleware)
   async getApplicantPlanById(req: Request, res: Response): Promise<void> {
     const planId = req.params.id;
     console.log(`Fetching applicant plan with ID: ${planId}`);
@@ -86,7 +105,7 @@ export class PlanController extends BaseHttpController {
     }
   }
 
-  @httpPost("/applicant", adminAuthMiddleware)
+  @httpPost("/admin/applicant", adminAuthMiddleware)
   async createApplicantPlan(req: Request, res: Response): Promise<void> {
     const planData = req.body;
     console.log("Creating a new applicant plan:", planData);
@@ -94,7 +113,7 @@ export class PlanController extends BaseHttpController {
     res.status(201).json({ plan: newPlan });
   }
 
-  @httpPatch("/applicant/:id", adminAuthMiddleware)
+  @httpPatch("/admin/applicant/:id", adminAuthMiddleware)
   async updateApplicantPlan(req: Request, res: Response): Promise<void> {
     const planId = req.params.id;
     const planData = req.body;

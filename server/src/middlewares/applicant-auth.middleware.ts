@@ -1,15 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+
 import { TYPES } from "../app/types";
 import { ApplicantRepository } from "../repositories/applicant.repository";
 import { container } from "../app/container";
+import { IApplicantWithPlan } from "../models/applicant.model";
 
 export interface AuthenticatedApplicantRequest extends Request {
-  applicant?: {
-    id: string;
-    role: string;
-    name: string;
-  };
+  applicant?: IApplicantWithPlan;
 }
 
 export const applicantAuthMiddleware = async (
@@ -67,11 +65,7 @@ export const applicantAuthMiddleware = async (
         .json({ message: "Account not verified - Check your email" });
     }
 
-    req.applicant = {
-      id: applicant._id.toString(),
-      role: "applicant",
-      name: applicant.name,
-    };
+    req.applicant = applicant;
 
     console.log("[DEBUG] Applicant authenticated:", req.applicant);
     next();

@@ -9,7 +9,6 @@ import {
   useGetJobQuery,
   useUpdateJobMutation,
 } from "../../api/endpoints/jobApi";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 const jobFormSchema = z.object({
   title: z.string().min(1, "Job title is required"),
@@ -22,6 +21,7 @@ const jobFormSchema = z.object({
   jobType: z.enum(["full-time", "part-time", "contract", "internship"]),
   experienceLevel: z.enum(["entry", "mid", "senior", "lead"]),
   educationRequirements: z.array(z.string().min(1)).optional(),
+  responsibilities: z.array(z.string().min(1)).optional(),
   location: z.enum(["remote", "hybrid", "onsite"]),
   deadline: z.string().optional(),
   skillsRequired: z.array(z.string().min(1)).optional(),
@@ -31,6 +31,7 @@ const jobFormSchema = z.object({
 type JobFormData = z.infer<typeof jobFormSchema>;
 
 const EditJobForm: React.FC = () => {
+  const [responsibilities, setResponsibilities] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [educationRequirements, setEducationRequirements] = useState<string[]>(
     []
@@ -65,6 +66,7 @@ const EditJobForm: React.FC = () => {
       setValue("jobType", job.jobType);
       setValue("experienceLevel", job.experienceLevel);
       setValue("educationRequirements", job.educationRequirements || []);
+      setValue("responsibilities", job.responsibilities || []);
       setValue("location", job.location);
       setValue("deadline", job.deadline ? job.deadline.split("T")[0] : "");
       setValue("skillsRequired", job.skillsRequired || []);
@@ -72,6 +74,7 @@ const EditJobForm: React.FC = () => {
 
       setSkills(job.skillsRequired || []);
       setEducationRequirements(job.educationRequirements || []);
+      setResponsibilities(job.responsibilities || []);
     }
   }, [job, setValue]);
 
@@ -115,30 +118,37 @@ const EditJobForm: React.FC = () => {
     setValue("skillsRequired", updated);
   };
 
-  const onSubmit = async (data: JobFormData) => {
-    try {
-      const updatedData = { ...data, id: jobId };
-      await updateJob(updatedData).unwrap();
-      toast.success("Job updated successfully!");
-      navigate("/employer/posted-jobs");
-    } catch (error: unknown) {
-      let errorMessage = "Something went wrong.";
-
-      if (typeof error === "object" && error !== null && "status" in error) {
-        const err = error as FetchBaseQueryError;
-
-        if ("data" in err) {
-          if (typeof err.data === "string") {
-            errorMessage = err.data;
-          } else if (typeof err.data === "object" && err.data !== null) {
-            errorMessage =
-              (err.data as { message?: string }).message || errorMessage;
-          }
-        }
+  // Responsibilities Add/Remove
+  const handleResponsibilityAdd = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const responsibility = (e.target as HTMLInputElement).value.trim();
+      if (responsibility && !responsibilities.includes(responsibility)) {
+        setResponsibilities((prev) => {
+          const updatedResponsibilities = [...prev, responsibility];
+          setValue("responsibilities", updatedResponsibilities);
+          return updatedResponsibilities;
+        });
+        (e.target as HTMLInputElement).value = "";
       }
-
-      toast.error(errorMessage);
     }
+  };
+
+  const handleResponsibilityDelete = (responsibilityToDelete: string) => {
+    setResponsibilities(
+      responsibilities.filter((resp) => resp !== responsibilityToDelete)
+    );
+    setValue(
+      "responsibilities",
+      responsibilities.filter((resp) => resp !== responsibilityToDelete)
+    );
+  };
+
+  const onSubmit = async (data: JobFormData) => {
+    const updatedData = { ...data, id: jobId };
+    await updateJob(updatedData).unwrap();
+    toast.success("Job updated successfully!");
+    navigate("/employer/posted-jobs");
   };
 
   if (isLoading) return <p>Loading job data...</p>;
@@ -257,6 +267,41 @@ const EditJobForm: React.FC = () => {
             <option value="senior">Senior</option>
             <option value="lead">Lead</option>
           </select>
+        </div>
+
+        {/* Responsibilities */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Responsibilities
+          </label>
+          <input
+            type="text"
+            onKeyDown={handleResponsibilityAdd}
+            placeholder="Press Enter to add responsibility"
+            className="mt-1 w-full text-gray-700 border border-gray-300 rounded-md p-2"
+          />
+          <div className="flex flex-wrap gap-2 mb-2 mt-2">
+            {responsibilities.map((responsibility) => (
+              <span
+                key={responsibility}
+                className="bg-blue-500 text-white py-1 px-3 rounded-full flex items-center space-x-2"
+              >
+                <span>{responsibility}</span>
+                <button
+                  type="button"
+                  onClick={() => handleResponsibilityDelete(responsibility)}
+                  className="text-white hover:text-gray-200"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
+          {errors.responsibilities && (
+            <p className="text-red-500 text-sm">
+              {errors.responsibilities.message}
+            </p>
+          )}
         </div>
 
         {/* Education */}

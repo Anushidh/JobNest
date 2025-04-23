@@ -24,28 +24,27 @@ export interface Employer {
   refreshToken?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  plan?: string;
+  plan?: EmployerPlan;
   planExpiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface EmployerPlan {
-  _id: string;
-  name: "normal" | "standard" | "premium";
-  jobPostLimit: number;
-  canViewApplicants: boolean;
-  credits: number;
-  price: number;
+export type EmployerPlanType = "basic" | "standard" | "premium";
+
+export interface EmployerPlanFeatures {
+  jobLimit: number | "unlimited";
+  highlightJobs: boolean;
+  premiumSupport: boolean;
   durationInDays: number;
-  prioritySupport: boolean;
-  featuredJobSlots: number;
-  analyticsAccess: boolean;
-  highlightCompany: boolean;
-  customBranding: boolean;
-  candidateInsights: boolean;
-  canDownloadResumes: boolean;
-  planDescription?: string;
-  createdAt: Date;
-  updatedAt: Date;
+}
+
+export interface EmployerPlan {
+  _id: string; // string version of ObjectId for frontend
+  name: EmployerPlanType;
+  description: string;
+  price: number;
+  features: EmployerPlanFeatures;
+  createdAt: string; // ISO string from server
+  updatedAt: string;
 }

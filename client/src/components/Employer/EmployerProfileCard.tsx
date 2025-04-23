@@ -14,8 +14,7 @@ import {
 import { RootState } from "../../app/store";
 import Modal from "./Modal";
 import { useUploadLogoMutation } from "../../api/endpoints/employerApi";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { toast } from "react-toastify";
+
 
 const EmployerProfileCard = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,33 +63,14 @@ const EmployerProfileCard = () => {
     const formData = new FormData();
     formData.append("logo", file);
 
-    try {
-      const response = await uploadLogo(formData).unwrap();
-      const updatedLogo = response?.user?.companyLogo;
-      if (updatedLogo) {
-        setLogoUrl(updatedLogo);
-      }
-    } catch (error: unknown) {
-      let errorMessage = "Something went wrong.";
-
-      if (typeof error === "object" && error !== null && "status" in error) {
-        const err = error as FetchBaseQueryError;
-
-        if ("data" in err) {
-          if (typeof err.data === "string") {
-            errorMessage = err.data;
-          } else if (typeof err.data === "object" && err.data !== null) {
-            errorMessage =
-              (err.data as { message?: string }).message || errorMessage;
-          }
-        }
-      }
-
-      toast.error(errorMessage);
+    const response = await uploadLogo(formData).unwrap();
+    const updatedLogo = response?.user?.companyLogo;
+    if (updatedLogo) {
+      setLogoUrl(updatedLogo);
     }
   };
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-4 text-sm text-gray-800">
+    <div className="bg-white h-full rounded-lg shadow p-4 mb-4 text-sm text-gray-800">
       {/* Top Section: Logo + Name + Info */}
       <div className="flex justify-between items-center mb-3">
         {/* Logo with upload */}

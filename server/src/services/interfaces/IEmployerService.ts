@@ -1,5 +1,5 @@
 import { CreateEmployerDto } from "../../dtos/employer.dto";
-import { IEmployer } from "../../models/employer.model";
+import { IEmployer, IEmployerWithPlan } from "../../models/employer.model";
 
 export interface IEmployerService {
   registerEmployer(employerData: CreateEmployerDto): Promise<string>;
@@ -8,7 +8,7 @@ export interface IEmployerService {
     email: string,
     password: string
   ): Promise<{
-    employer: Omit<IEmployer, "password">;
+    employer: Omit<IEmployerWithPlan, "password">;
     accessToken: string;
     refreshToken: string;
   }>;

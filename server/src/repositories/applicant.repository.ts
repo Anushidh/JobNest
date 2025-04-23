@@ -1,6 +1,9 @@
 import { injectable } from "inversify";
 
-import Applicant, { IApplicant } from "../models/applicant.model";
+import Applicant, {
+  IApplicant,
+  IApplicantWithPlan,
+} from "../models/applicant.model";
 import { IApplicantRepository } from "./interfaces/IApplicantRepository";
 import { AppError } from "../utils/error.util";
 import { UpdateApplicantDto } from "../dtos/applicant.dto";
@@ -12,9 +15,9 @@ export class ApplicantRepository implements IApplicantRepository {
     throw new AppError("Operation could not be completed", 500);
   }
 
-  async findByEmail(email: string): Promise<IApplicant | null> {
+  async findByEmail(email: string): Promise<IApplicantWithPlan | null> {
     try {
-      return await Applicant.findOne({ email });
+      return await Applicant.findOne({ email }).populate("plan");
     } catch (error) {
       this.handleDatabaseError(error);
     }
@@ -29,9 +32,9 @@ export class ApplicantRepository implements IApplicantRepository {
     }
   }
 
-  async findById(providerId: string): Promise<IApplicant | null> {
+  async findById(providerId: string): Promise<IApplicantWithPlan | null> {
     try {
-      return await Applicant.findById(providerId);
+      return await Applicant.findById(providerId).populate("plan");
     } catch (error) {
       this.handleDatabaseError(error);
     }
@@ -58,7 +61,7 @@ export class ApplicantRepository implements IApplicantRepository {
   async addJobToApplicant(
     applicantId: string,
     jobId: string
-  ): Promise<IApplicant | null> {
+  ): Promise<IApplicantWithPlan | null> {
     try {
       return await Applicant.findByIdAndUpdate(
         applicantId,

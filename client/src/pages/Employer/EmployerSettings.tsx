@@ -3,7 +3,7 @@ import SubscriptionPlanCard from "../../components/Employer/SubscriptionPlanCard
 
 const EmployerSettings = () => {
   return (
-    <div className="flex px-28 py-8 gap-6 bg-gray-100">
+    <div className="flex min-h-screen px-28 py-8 gap-6 bg-gray-100">
       {/* Left: Employer Profile */}
       <div className="flex-1">
         <EmployerProfileCard />

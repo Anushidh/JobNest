@@ -12,6 +12,7 @@ export interface IJob extends Document {
     min: number;
     max: number;
   };
+  responsibilities: string[];
   jobType: "full-time" | "part-time" | "contract" | "internship";
   location: "remote" | "hybrid" | "onsite";
   skillsRequired: string[];
@@ -52,9 +53,32 @@ const jobSchema: Schema<IJob> = new Schema(
       type: String,
     },
     salary: {
-      min: { type: Number, min: 0 },
-      max: { type: Number, min: 0 },
+      min: {
+        type: Number,
+        min: 0,
+        required: true,
+      },
+      max: {
+        type: Number,
+        min: 0,
+        required: true,
+        validate: {
+          validator: function (this: any, v: number) {
+            return v >= this.salary.min;
+          },
+          message: "Max salary must be greater than or equal to min salary",
+        },
+      },
     },
+    responsibilities: {
+      type: [String],
+      required: [true, "At least one job responsibility is required"],
+      validate: {
+        validator: (v: string[]) => v.length > 0,
+        message: "Please specify at least one responsibility",
+      },
+    },
+    
     jobType: {
       type: String,
       enum: ["full-time", "part-time", "contract", "internship"],
@@ -98,7 +122,7 @@ const jobSchema: Schema<IJob> = new Schema(
       type: Date,
       validate: {
         validator: function (this: IJob, v: Date) {
-          return !v || v > new Date(); // Must be future date if provided
+          return !v || v > new Date();
         },
         message: "Deadline must be in the future",
       },

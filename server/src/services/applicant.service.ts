@@ -14,7 +14,7 @@ import {
   verifyRefreshToken,
 } from "../utils/token.util";
 import { IApplicantService } from "./interfaces/IApplicantService";
-import { IApplicant } from "../models/applicant.model";
+import { IApplicant, IApplicantWithPlan } from "../models/applicant.model";
 
 @injectable()
 export class ApplicantService implements IApplicantService {
@@ -78,6 +78,7 @@ export class ApplicantService implements IApplicantService {
       ...applicantData,
       role: "applicant",
       isVerified: true,
+      applicationsLeft: 5,
     });
 
     await redisClient.del(redisKey);
@@ -89,7 +90,7 @@ export class ApplicantService implements IApplicantService {
     email: string,
     password: string
   ): Promise<{
-    applicant: Omit<IApplicant, "password">;
+    applicant: Omit<IApplicantWithPlan, "password">;
     accessToken: string;
     refreshToken: string;
   }> {
@@ -234,46 +235,46 @@ export class ApplicantService implements IApplicantService {
     return { applicant: applicantWithoutPassword, accessToken, refreshToken };
   }
 
-  async toggleSaveJobForApplicant(
-    applicantId: string,
-    jobId: string
-  ): Promise<IApplicant | null> {
-    // Fetch the applicant to check if the job is already saved
-    const applicant = await this.applicantRepository.findById(applicantId);
-    if (!applicant) {
-      throw new AppError("Applicant not found", 404);
-    }
+  // async toggleSaveJobForApplicant(
+  //   applicantId: string,
+  //   jobId: string
+  // ): Promise<IApplicant | null> {
+  //   // Fetch the applicant to check if the job is already saved
+  //   const applicant = await this.applicantRepository.findById(applicantId);
+  //   if (!applicant) {
+  //     throw new AppError("Applicant not found", 404);
+  //   }
 
-    // Convert jobId to ObjectId using Mongoose
-    const objectIdJob = new Types.ObjectId(jobId);
+  //   // Convert jobId to ObjectId using Mongoose
+  //   const objectIdJob = new Types.ObjectId(jobId);
 
-    // Check if the job is already in savedJobs
-    const jobIndex = applicant.savedJobs?.findIndex(
-      (job) => job._id.equals(objectIdJob) // Compare ObjectId instances
-    );
+  //   // Check if the job is already in savedJobs
+  //   const jobIndex = applicant.savedJobs?.findIndex(
+  //     (job) => job._id.equals(objectIdJob) // Compare ObjectId instances
+  //   );
 
-    // If job is not saved, add it; if it's saved, remove it
-    if (jobIndex === -1) {
-      // Job is not saved, so add it
-      applicant.savedJobs.push(objectIdJob);
-    } else {
-      // Job is saved, so remove it
-      applicant.savedJobs.splice(jobIndex, 1);
-    }
+  //   // If job is not saved, add it; if it's saved, remove it
+  //   if (jobIndex === -1) {
+  //     // Job is not saved, so add it
+  //     applicant.savedJobs.push(objectIdJob);
+  //   } else {
+  //     // Job is saved, so remove it
+  //     applicant.savedJobs.splice(jobIndex, 1);
+  //   }
 
-    // Save the updated applicant to the database
-    const updatedApplicant = await this.applicantRepository.updateApplicant(
-      applicant
-    );
+  //   // Save the updated applicant to the database
+  //   const updatedApplicant = await this.applicantRepository.updateApplicant(
+  //     applicant
+  //   );
 
-    if (!updatedApplicant) {
-      throw new AppError("Failed to save job for applicant", 400);
-    }
+  //   if (!updatedApplicant) {
+  //     throw new AppError("Failed to save job for applicant", 400);
+  //   }
 
-    return updatedApplicant;
-  }
+  //   return updatedApplicant;
+  // }
 
-  async getApplicantById(applicantId: string): Promise<IApplicant | null> {
+  async getApplicantById(applicantId: string): Promise<IApplicantWithPlan | null> {
     const applicant = await this.applicantRepository.findById(applicantId);
     if (!applicant) {
       throw new AppError("Applicant not found", 404);
@@ -281,36 +282,36 @@ export class ApplicantService implements IApplicantService {
     return applicant;
   }
 
-  async unsaveJobForApplicant(
-    applicantId: string,
-    jobId: string
-  ): Promise<IApplicant | null> {
-    const applicant = await this.applicantRepository.findById(applicantId);
-    if (!applicant) {
-      throw new AppError("Applicant not found", 404);
-    }
+  // async unsaveJobForApplicant(
+  //   applicantId: string,
+  //   jobId: string
+  // ): Promise<IApplicant | null> {
+  //   const applicant = await this.applicantRepository.findById(applicantId);
+  //   if (!applicant) {
+  //     throw new AppError("Applicant not found", 404);
+  //   }
 
-    const objectIdJob = new Types.ObjectId(jobId);
+  //   const objectIdJob = new Types.ObjectId(jobId);
 
-    // Filter out the jobId from savedJobs
-    applicant.savedJobs = applicant.savedJobs.filter(
-      (job) => !job._id.equals(objectIdJob)
-    );
+  //   // Filter out the jobId from savedJobs
+  //   applicant.savedJobs = applicant.savedJobs.filter(
+  //     (job) => !job._id.equals(objectIdJob)
+  //   );
 
-    const updatedApplicant = await this.applicantRepository.updateApplicant(
-      applicant
-    );
-    if (!updatedApplicant) {
-      throw new AppError("Failed to unsave job", 400);
-    }
+  //   const updatedApplicant = await this.applicantRepository.updateApplicant(
+  //     applicant
+  //   );
+  //   if (!updatedApplicant) {
+  //     throw new AppError("Failed to unsave job", 400);
+  //   }
 
-    return updatedApplicant;
-  }
+  //   return updatedApplicant;
+  // }
 
   async addJobToApplicant(
     applicantId: string,
     jobId: string
-  ): Promise<IApplicant | null> {
+  ): Promise<IApplicantWithPlan | null> {
     // Call the repository method to add the job to the applicant
     const updatedApplicant = await this.applicantRepository.addJobToApplicant(
       applicantId,
@@ -395,17 +396,17 @@ export class ApplicantService implements IApplicantService {
     return this.applicantRepository.findAllApplicants(page, limit);
   }
 
-  async toggleBlockStatus(id: string): Promise<IApplicant | null> {
-    const applicant = await this.applicantRepository.findById(id);
+  // async toggleBlockStatus(id: string): Promise<IApplicant | null> {
+  //   const applicant = await this.applicantRepository.findById(id);
 
-    if (!applicant) {
-      throw new Error("Applicant not found");
-    }
+  //   if (!applicant) {
+  //     throw new Error("Applicant not found");
+  //   }
 
-    applicant.isBlocked = !applicant.isBlocked;
+  //   applicant.isBlocked = !applicant.isBlocked;
 
-    await this.applicantRepository.updateApplicant(applicant);
+  //   await this.applicantRepository.updateApplicant(applicant);
 
-    return applicant;
-  }
+  //   return applicant;
+  // }
 }

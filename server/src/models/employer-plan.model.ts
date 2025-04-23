@@ -1,21 +1,18 @@
 import mongoose, { Schema, Document, model, Model } from "mongoose";
 
+interface EmployerPlanFeatures {
+  jobLimit: number | "unlimited";
+  highlightJobs: boolean;
+  premiumSupport: boolean;
+  durationInDays: number;
+}
+
 export interface IEmployerPlan extends Document {
   _id: mongoose.Types.ObjectId;
-  name: "normal" | "standard" | "premium";
-  jobPostLimit: number;
-  canViewApplicants: boolean;
-  credits: number;
+  name: "basic" | "standard" | "premium";
+  description: string;
   price: number;
-  durationInDays: number;
-  prioritySupport: boolean;
-  featuredJobSlots: number;
-  analyticsAccess: boolean;
-  highlightCompany: boolean;
-  customBranding: boolean;
-  candidateInsights: boolean;
-  canDownloadResumes: boolean;
-  planDescription?: string;
+  features: EmployerPlanFeatures;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,60 +21,26 @@ const employerPlanSchema = new Schema<IEmployerPlan>(
   {
     name: {
       type: String,
-      enum: ["normal", "standard", "premium"],
+      enum: {
+        values: ["basic", "standard", "premium"],
+        message: "{VALUE} is not a valid plan name",
+      },
       required: true,
       unique: true,
-    },
-    jobPostLimit: {
-      type: Number,
-      required: true,
-    },
-    canViewApplicants: {
-      type: Boolean,
-      default: false,
-    },
-    credits: {
-      type: Number,
-      default: 0,
     },
     price: {
       type: Number,
       required: true,
     },
-    durationInDays: {
-      type: Number,
+    description: {
+      type: String,
       required: true,
     },
-    prioritySupport: {
-      type: Boolean,
-      default: false,
-    },
-    featuredJobSlots: {
-      type: Number,
-      default: 0,
-    },
-    analyticsAccess: {
-      type: Boolean,
-      default: false,
-    },
-    highlightCompany: {
-      type: Boolean,
-      default: false,
-    },
-    customBranding: {
-      type: Boolean,
-      default: false,
-    },
-    candidateInsights: {
-      type: Boolean,
-      default: false,
-    },
-    canDownloadResumes: {
-      type: Boolean,
-      default: false,
-    },
-    planDescription: {
-      type: String,
+    features: {
+      jobLimit: { type: Schema.Types.Mixed, required: true }, // number or "unlimited"
+      highlightJobs: { type: Boolean, default: false },
+      premiumSupport: { type: Boolean, default: false },
+      durationInDays: { type: Number, required: true },
     },
   },
   { timestamps: true }

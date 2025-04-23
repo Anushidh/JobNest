@@ -1,4 +1,4 @@
-import Employer, { IEmployer } from "../models/employer.model";
+import Employer, { IEmployer, IEmployerWithPlan } from "../models/employer.model";
 import { injectable } from "inversify";
 import { IEmployerRepository } from "./interfaces/IEmployerRepository";
 import { AppError } from "../utils/error.util";
@@ -10,15 +10,15 @@ export class EmployerRepository implements IEmployerRepository {
     throw new AppError("Operation could not be completed", 500);
   }
 
-  async findByEmail(email: string): Promise<IEmployer | null> {
+  async findByEmail(email: string): Promise<IEmployerWithPlan | null> {
     try {
-      return await Employer.findOne({ email }).exec();
+      return await Employer.findOne({ email }).populate("plan").exec();
     } catch (error) {
       this.handleDatabaseError(error);
     }
   }
 
-  async create(employerData: Partial<IEmployer>): Promise<IEmployer> {
+  async create(employerData: Partial<IEmployer>): Promise<IEmployerWithPlan> {
     try {
       const employer = new Employer(employerData);
       return await employer.save();
@@ -27,7 +27,7 @@ export class EmployerRepository implements IEmployerRepository {
     }
   }
 
-  async findById(providerId: string): Promise<IEmployer | null> {
+  async findById(providerId: string): Promise<IEmployerWithPlan | null> {
     try {
       return await Employer.findById(providerId).populate('plan');
     } catch (error) {
@@ -98,7 +98,7 @@ export class EmployerRepository implements IEmployerRepository {
     }
   }
 
-  async updateEmployer(employer: IEmployer): Promise<IEmployer | null> {
+  async updateEmployer(employer: IEmployerWithPlan): Promise<IEmployer | null> {
     try {
       return await Employer.findByIdAndUpdate(employer._id, employer, {
         new: true,

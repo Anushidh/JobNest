@@ -92,7 +92,6 @@ export class JobRepository implements IJobRepository {
         .exec();
     } catch (error) {
       this.handleDatabaseError(error);
-      throw error; // Propagate the error
     }
   }
   

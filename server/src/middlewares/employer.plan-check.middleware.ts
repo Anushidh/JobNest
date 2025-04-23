@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import EmployerPlan, { IEmployerPlan } from "../models/employer-plan.model";
 import { EmployerRepository } from "../repositories/employer.repository";
 import { container } from "../app/container";
+import { IEmployerWithPlan } from "../models/employer.model";
 import { AuthenticatedEmployerRequest } from "./employer-auth.middleware";
-import { TYPES } from "../app/types";
 
 export const employerPlanCheckMiddleware = async (
   req: AuthenticatedEmployerRequest,
@@ -11,41 +10,43 @@ export const employerPlanCheckMiddleware = async (
   next: NextFunction
 ) => {
   try {
-    const employerId = req.employer?.id;
-    if (!employerId) {
-      return res.status(401).json({ message: "Employer not authenticated" });
+    console.log("[DEBUG] Employer plan check middleware triggered");
+
+    // 1. Ensure employer is authenticated
+    if (!req.employer) {
+      return res.status(401).json({ message: "Employer is not authenticated" });
     }
 
-    const employerRepository = container.get<EmployerRepository>(
-      TYPES.EmployerRepository
-    );
-    const employer = await employerRepository.findById(employerId);
+    const employer: IEmployerWithPlan = req.employer;
 
-    if (!employer || !employer.plan) {
-      return res.status(404).json({ message: "Employer or plan not found" });
+    // 2. Check the number of job posts left for the employer
+    if (employer.jobPostsLeft === "unlimited") {
+      console.log("[DEBUG] Employer has unlimited job posts.");
+      return next();
     }
 
-    const employerPlan = employer.plan
-    const jobPostCount = employer.postedJobs?.length || 0;
-
-    if (jobPostCount >= employerPlan.jobPostLimit) {
-      return res.status(403).json({
-        message: `Job post limit exceeded. Limit: ${employerPlan.jobPostLimit}`,
-      });
+    if (
+      typeof employer.jobPostsLeft === "number" &&
+      employer.jobPostsLeft > 0
+    ) {
+      console.log(
+        "[DEBUG] Employer has job posts remaining:",
+        employer.jobPostsLeft
+      );
+      return next();
     }
 
-    const expiryDate = new Date(employer.createdAt);
-    expiryDate.setDate(expiryDate.getDate() + employerPlan.durationInDays);
-
-    if (new Date() > expiryDate) {
-      return res
-        .status(403)
-        .json({ message: "Plan expired. Please renew your subscription." });
-    }
-
-    next();
+    // 3. If no job posts are left or plan does not support posting
+    console.log("[ERROR] Employer cannot post a job - Job posts limit reached");
+    return res.status(403).json({
+      message:
+        "Job posting limit reached - Upgrade your plan to post more jobs",
+    });
   } catch (error: any) {
-    console.error("[EmployerPlanMiddleware Error]", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    console.error(
+      "[ERROR] Employer plan check middleware error:",
+      error.message
+    );
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

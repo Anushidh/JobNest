@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Model, model } from "mongoose";
+import { IApplicantPlan } from "./applicant-plan.model";
 
 export interface IApplicant extends Document {
   _id: mongoose.Types.ObjectId;
@@ -10,7 +11,7 @@ export interface IApplicant extends Document {
   profilePicture?: string;
   resume?: string;
   skills: string[];
-  experience: "entry" | "mid" | "senior" | "lead";
+  experience?: "entry" | "mid" | "senior" | "lead";
   education?: string[];
   appliedJobs: mongoose.Types.ObjectId[];
   savedJobs: mongoose.Types.ObjectId[];
@@ -22,8 +23,13 @@ export interface IApplicant extends Document {
   resetPasswordExpires?: Date | null;
   plan?: mongoose.Types.ObjectId;
   planExpiresAt?: Date;
+  applicationsLeft: number | "unlimited";
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IApplicantWithPlan extends Omit<IApplicant, "plan"> {
+  plan?: IApplicantPlan | mongoose.Types.ObjectId;
 }
 
 const applicantSchema: Schema<IApplicant> = new Schema(
@@ -81,7 +87,6 @@ const applicantSchema: Schema<IApplicant> = new Schema(
     experience: {
       type: String,
       enum: ["entry", "mid", "senior", "lead"],
-      required: true,
     },
     education: {
       type: [String],
@@ -133,11 +138,38 @@ const applicantSchema: Schema<IApplicant> = new Schema(
     planExpiresAt: {
       type: Date,
     },
+    applicationsLeft: {
+      type: Schema.Types.Mixed, // number or 'unlimited'
+    },
   },
+
   {
     timestamps: true,
   }
 );
+
+applicantSchema.pre<IApplicant>("save", async function (next) {
+  if (!this.plan) {
+    try {
+      const basicPlan = await mongoose
+        .model("ApplicantPlan")
+        .findOne({ name: "basic" });
+
+      if (basicPlan) {
+        this.plan = basicPlan._id;
+        this.applicationsLeft = basicPlan.features.applicationLimit;
+      } else {
+        console.warn("⚠️ No default 'basic' plan found in the database.");
+      }
+
+      next();
+    } catch (error) {
+      next(error as Error);
+    }
+  } else {
+    next();
+  }
+});
 
 const Applicant: Model<IApplicant> = model<IApplicant>(
   "Applicant",

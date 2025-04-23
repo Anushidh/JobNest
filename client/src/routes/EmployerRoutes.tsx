@@ -6,18 +6,15 @@ import EmployerLayout from "../layouts/EmployerLayout";
 import PublicRoute from "../pages/Employer/PublicRoute";
 import {
   Applications,
-  Dashboard,
+  EmployerDashboard,
   EmployerSignup,
   EmployerSignIn,
   OtpForm,
   JobPostForm,
-  EmployerSettings,
   PostedJobs,
   EditJobForm,
   EmployerPlans,
 } from "../pages/Employer";
-
-
 
 const ProtectedRoute = () => {
   const location = useLocation();
@@ -37,13 +34,16 @@ const EmployerRoutes = () => {
     <Routes>
       <Route element={<EmployerLayout />}>
         <Route element={<ProtectedRoute />}>
-          <Route index element={<Dashboard />} />
+          <Route
+            path=""
+            element={<Navigate to="/employer/dashboard" replace />}
+          />
+          <Route path="/dashboard" element={<EmployerDashboard />} />
           <Route path="applicants" element={<Applications />} />
           <Route path="post-job" element={<JobPostForm />} />
           <Route path="edit-job/:jobId" element={<EditJobForm />} />
           <Route path="posted-jobs" element={<PostedJobs />} />
           <Route path="plans" element={<EmployerPlans />} />
-          <Route path="settings" element={<EmployerSettings />} />
         </Route>
       </Route>
       <Route element={<PublicRoute />}>

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { inject } from "inversify";
 import {
   BaseHttpController,
@@ -9,7 +9,6 @@ import {
   httpPut,
 } from "inversify-express-utils";
 import mongoose from "mongoose";
-import { ParsedQs } from "qs";
 
 import { TYPES } from "../app/types";
 import { JobService } from "../services/job.service";
@@ -24,6 +23,10 @@ import {
   AuthenticatedApplicantRequest,
 } from "../middlewares/applicant-auth.middleware";
 import { ApplicantService } from "../services/applicant.service";
+import { PlanService } from "../services/plan.service";
+import { EmployerService } from "../services/employer.service";
+import { employerPlanCheckMiddleware } from "../middlewares/employer.plan-check.middleware";
+import { applicantPlanCheckMiddleware } from "../middlewares/applicant.plan-check.middleware";
 
 @controller("/jobs")
 export class JobController extends BaseHttpController {
@@ -31,31 +34,42 @@ export class JobController extends BaseHttpController {
     @inject(TYPES.JobService)
     private jobService: JobService,
     @inject(TYPES.ApplicantService)
-    private applicantService: ApplicantService
+    private applicantService: ApplicantService,
+    @inject(TYPES.EmployerService)
+    private employerService: EmployerService,
+    @inject(TYPES.PlanService)
+    private planService: PlanService
   ) {
     super();
   }
 
-  @httpPost("/employer", employerAuthMiddleware, validateRequest(CreateJobDto))
+  @httpPost(
+    "/employer",
+    employerAuthMiddleware,
+    employerPlanCheckMiddleware,
+    validateRequest(CreateJobDto)
+  )
   async createJob(req: AuthenticatedEmployerRequest, res: Response) {
-    try {
-      console.log("inside");
-      console.log(req.body);
-      const employer = req.employer;
-      if (!employer) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const employerObjectId = new mongoose.Types.ObjectId(employer.id);
-      const jobData = {
-        ...req.body,
-        employer: employerObjectId,
-        companyName: employer.companyName,
-      };
-      const job = await this.jobService.createJob(jobData);
-      res.status(201).json(job);
-    } catch (error: any) {
-      res.status(error.statusCode || 500).json({ message: error.message });
+    console.log("inside");
+    console.log(req.body);
+    let employer = req.employer;
+    if (!employer) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+
+    const employerObjectId = new mongoose.Types.ObjectId(employer.id);
+    const jobData = {
+      ...req.body,
+      employer: employerObjectId,
+      companyName: employer.companyName,
+      companyLogo: employer.companyLogo,
+    };
+    const job = await this.jobService.createJob(jobData);
+    if (employer.jobPostsLeft !== "unlimited") {
+      employer.jobPostsLeft = employer.jobPostsLeft - 1;
+      await employer.save();
+    }
+    res.status(201).json(job);
   }
 
   @httpGet("/employer", employerAuthMiddleware)
@@ -111,30 +125,29 @@ export class JobController extends BaseHttpController {
 
   @httpDelete("/employer/:id", employerAuthMiddleware)
   async deleteJob(req: AuthenticatedEmployerRequest, res: Response) {
-    try {
-      const id = req.params.id;
-      const employerId = req.employer?.id;
-      if (!employerId) {
-        res.status(403).json({
-          message: "Unauthorized access - No employer ID found",
-        });
-        return;
-      }
-      const success = await this.jobService.deleteJob(id);
-      if (!success) {
-        return res.status(404).json({ message: "Job not found" });
-      }
-      const jobs = await this.jobService.getEmployerJobs(employerId);
-      if (!jobs) {
-        return res
-          .status(404)
-          .json({ message: "No jobs found for this employer" });
-      }
-
-      res.status(200).json(jobs);
-    } catch (error: any) {
-      res.status(error.statusCode || 500).json({ message: error.message });
+    const id = req.params.id;
+    const employer = req.employer;
+    if (!employer) {
+      res.status(403).json({
+        message: "Unauthorized access - No employer ID found",
+      });
+      return;
     }
+    const success = await this.jobService.deleteJob(id);
+    if (!success) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    const jobs = await this.jobService.getEmployerJobs(employer.id);
+    if (!jobs) {
+      return res
+        .status(404)
+        .json({ message: "No jobs found for this employer" });
+    }
+    if (employer.jobPostsLeft !== "unlimited") {
+      employer.jobPostsLeft = employer.jobPostsLeft + 1;
+      await employer.save();
+    }
+    res.status(200).json(jobs);
   }
 
   @httpGet("/applicant", applicantAuthMiddleware)
@@ -142,7 +155,6 @@ export class JobController extends BaseHttpController {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = (req.query.search as string) || "";
-    const applicantId = req.applicant?.id;
 
     // Parse filters from query string as arrays
     const jobType = this.ensureArray(req.query.jobType as string | string[]);
@@ -171,121 +183,126 @@ export class JobController extends BaseHttpController {
     return param.toString().split(","); // Split a single string into an array
   }
 
-  @httpPost("/toggle-save-job", applicantAuthMiddleware)
-  async toggleSaveJobForApplicant(
-    req: AuthenticatedApplicantRequest,
-    res: Response
-  ) {
-    const { jobId } = req.body;
-    console.log(jobId);
-    const applicantId = req.applicant?.id;
+  // @httpPost("/toggle-save-job", applicantAuthMiddleware)
+  // async toggleSaveJobForApplicant(
+  //   req: AuthenticatedApplicantRequest,
+  //   res: Response
+  // ) {
+  //   const { jobId } = req.body;
+  //   console.log(jobId);
+  //   const applicantId = req.applicant?.id;
 
-    if (!applicantId || !jobId) {
-      return res
-        .status(400)
-        .json({ message: "Applicant ID or Job ID missing" });
-    }
+  //   if (!applicantId || !jobId) {
+  //     return res
+  //       .status(400)
+  //       .json({ message: "Applicant ID or Job ID missing" });
+  //   }
 
-    try {
-      const updatedApplicant =
-        await this.applicantService.toggleSaveJobForApplicant(
-          applicantId,
-          jobId
-        );
+  //   try {
+  //     const updatedApplicant =
+  //       await this.applicantService.toggleSaveJobForApplicant(
+  //         applicantId,
+  //         jobId
+  //       );
 
-      res.status(200).json(updatedApplicant);
-    } catch (error: any) {
-      res.status(error.statusCode || 500).json({ message: error.message });
-    }
-  }
+  //     res.status(200).json(updatedApplicant);
+  //   } catch (error: any) {
+  //     res.status(error.statusCode || 500).json({ message: error.message });
+  //   }
+  // }
 
-  @httpGet("/saved", applicantAuthMiddleware)
-  async getSavedJobsForApplicant(
-    req: AuthenticatedApplicantRequest,
-    res: Response
-  ) {
-    console.log("inside saved jobs");
-    const applicantId = req.applicant?.id;
-    console.log(applicantId);
-    if (!applicantId) {
-      return res.status(400).json({ message: "Applicant ID is missing" });
-    }
+  // @httpGet("/saved", applicantAuthMiddleware)
+  // async getSavedJobsForApplicant(
+  //   req: AuthenticatedApplicantRequest,
+  //   res: Response
+  // ) {
+  //   console.log("inside saved jobs");
+  //   const applicantId = req.applicant?.id;
+  //   console.log(applicantId);
+  //   if (!applicantId) {
+  //     return res.status(400).json({ message: "Applicant ID is missing" });
+  //   }
 
-    try {
-      const applicant = await this.applicantService.getApplicantById(
-        applicantId
-      );
-      console.log(applicant);
-      if (!applicant) {
-        return res.status(404).json({ message: "Applicant not found" });
-      }
+  //   try {
+  //     const applicant = await this.applicantService.getApplicantById(
+  //       applicantId
+  //     );
+  //     console.log(applicant);
+  //     if (!applicant) {
+  //       return res.status(404).json({ message: "Applicant not found" });
+  //     }
 
-      const savedJobIds: string[] = (applicant.savedJobs || []).map(
-        (jobId) => jobId.toString() // Convert ObjectId to string
-      );
-      const savedJobs = await this.jobService.getSavedJobs(savedJobIds);
-      res.status(200).json(savedJobs);
-    } catch (error: any) {
-      res.status(error.statusCode || 500).json({ message: error.message });
-    }
-  }
+  //     const savedJobIds: string[] = (applicant.savedJobs || []).map(
+  //       (jobId) => jobId.toString() // Convert ObjectId to string
+  //     );
+  //     const savedJobs = await this.jobService.getSavedJobs(savedJobIds);
+  //     res.status(200).json(savedJobs);
+  //   } catch (error: any) {
+  //     res.status(error.statusCode || 500).json({ message: error.message });
+  //   }
+  // }
 
-  @httpDelete("/unsave/:jobId", applicantAuthMiddleware)
-  async unsaveJobForApplicant(
-    req: AuthenticatedApplicantRequest,
-    res: Response
-  ) {
-    const applicantId = req.applicant?.id;
-    const jobId = req.params.jobId;
+  // @httpDelete("/unsave/:jobId", applicantAuthMiddleware)
+  // async unsaveJobForApplicant(
+  //   req: AuthenticatedApplicantRequest,
+  //   res: Response
+  // ) {
+  //   const applicantId = req.applicant?.id;
+  //   const jobId = req.params.jobId;
 
-    if (!applicantId || !jobId) {
-      return res
-        .status(400)
-        .json({ message: "Applicant ID or Job ID missing" });
-    }
+  //   if (!applicantId || !jobId) {
+  //     return res
+  //       .status(400)
+  //       .json({ message: "Applicant ID or Job ID missing" });
+  //   }
 
-    try {
-      const updatedApplicant =
-        await this.applicantService.unsaveJobForApplicant(applicantId, jobId);
+  //   try {
+  //     const updatedApplicant =
+  //       await this.applicantService.unsaveJobForApplicant(applicantId, jobId);
 
-      if (!updatedApplicant) {
-        return res.status(500).json({ message: "Failed to unsave job" });
-      }
+  //     if (!updatedApplicant) {
+  //       return res.status(500).json({ message: "Failed to unsave job" });
+  //     }
 
-      return res.status(200).json({
-        savedJobs: updatedApplicant.savedJobs,
-      });
-    } catch (error: any) {
-      return res
-        .status(error.statusCode || 500)
-        .json({ message: error.message });
-    }
-  }
+  //     return res.status(200).json({
+  //       savedJobs: updatedApplicant.savedJobs,
+  //     });
+  //   } catch (error: any) {
+  //     return res
+  //       .status(error.statusCode || 500)
+  //       .json({ message: error.message });
+  //   }
+  // }
 
-  @httpPost("/:id/apply", applicantAuthMiddleware)
+  @httpPost("/:id/apply", applicantAuthMiddleware, applicantPlanCheckMiddleware)
   async applyForJob(req: AuthenticatedApplicantRequest, res: Response) {
     const jobId = req.params.id;
-    const applicantId = req.applicant?.id;
+    let applicant = req.applicant;
 
-    if (!applicantId) {
+    if (!applicant) {
       return res
         .status(401)
         .json({ message: "Unauthorized - Applicant not found" });
     }
 
-    const job = await this.jobService.applyForJob(jobId, applicantId);
+    const job = await this.jobService.applyForJob(jobId, applicant.id);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    const applicant = await this.applicantService.addJobToApplicant(
-      applicantId,
+    const updatedApplicant = await this.applicantService.addJobToApplicant(
+      applicant.id,
       jobId
     );
-    if (!applicant) {
+    if (!updatedApplicant) {
       return res.status(404).json({ message: "Applicant not found" });
     }
-    
+    if (updatedApplicant.applicationsLeft !== "unlimited") {
+      updatedApplicant.applicationsLeft = updatedApplicant.applicationsLeft - 1;
+      await updatedApplicant.save();
+    }
+    applicant = updatedApplicant;
+
     res.status(200).json({ job, applicant });
   }
 

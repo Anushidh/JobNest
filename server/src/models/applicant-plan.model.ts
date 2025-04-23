@@ -1,50 +1,45 @@
 import mongoose, { Schema, Document, model } from "mongoose";
 
+interface ApplicantPlanFeatures {
+  applicationLimit: number | "unlimited";
+  resumeBoost: boolean;
+  personalizedSupport: boolean;
+  durationInDays: number;
+}
+
 export interface IApplicantPlan extends Document {
   _id: mongoose.Types.ObjectId;
-  name: "normal" | "standard" | "premium";
-  jobApplyLimit: number;
-  canAccessChat: boolean;
-  credits: number;
+  name: "basic" | "standard" | "premium";
+  description: string;
   price: number;
-  durationInDays: number;
-  planDescription?: string;
+  features: ApplicantPlanFeatures;
   createdAt: Date;
   updatedAt: Date;
 }
-
 const applicantPlanSchema = new Schema<IApplicantPlan>(
   {
     name: {
       type: String,
-      enum: ["normal", "standard", "premium"],
+      enum: {
+        values: ["basic", "standard", "premium"],
+        message: "{VALUE} is not a valid plan name",
+      },
       required: true,
       unique: true,
     },
-    jobApplyLimit: {
-      type: Number,
+    description: {
+      type: String,
       required: true,
-    },
-    canAccessChat: {
-      type: Boolean,
-      default: false,
-    },
-    credits: {
-      type: Number,
-      default: 0,
     },
     price: {
       type: Number,
       required: true,
     },
-    durationInDays: {
-      type: Number,
-      required: true,
-    },
-    planDescription: {
-      type: String,
-      required: false,
-      default: "",
+    features: {
+      applicationLimit: { type: Schema.Types.Mixed, required: true }, // number or 'unlimited'
+      resumeBoost: { type: Boolean, default: false },
+      personalizedSupport: { type: Boolean, default: false },
+      durationInDays: { type: Number, required: true },
     },
   },
   { timestamps: true }

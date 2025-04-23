@@ -44,26 +44,11 @@ const EmployerSignup = () => {
   });
 
   const onSubmit = async (data: SignupFormData) => {
-    try {
-      console.log(data);
-      const result = await signup(data).unwrap();
-      console.log("Signup success:", result);
-      navigate("/employer/verify", { state: { email: data.email } });
-    } catch (error: unknown) {
-      let errorMessage = "Something went wrong.";
-      if (typeof error === "object" && error !== null && "status" in error) {
-        const err = error as FetchBaseQueryError;
-        if ("data" in err) {
-          if (typeof err.data === "string") {
-            errorMessage = err.data;
-          } else if (typeof err.data === "object" && err.data !== null) {
-            errorMessage =
-              (err.data as { message?: string }).message || errorMessage;
-          }
-        }
-      }
-      toast.error(errorMessage);
-    }
+    console.log(data);
+    const { confirmPassword, ...signupData } = data;
+    const result = await signup(signupData).unwrap();
+    console.log("Signup success:", result);
+    navigate("/employer/verify", { state: { email: data.email } });
   };
 
   const handleGoogleSuccess = async (response: CredentialResponse) => {

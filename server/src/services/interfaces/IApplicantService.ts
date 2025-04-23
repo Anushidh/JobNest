@@ -1,5 +1,5 @@
 import { CreateApplicantDto } from "../../dtos/applicant.dto";
-import { IApplicant } from "../../models/applicant.model";
+import { IApplicant, IApplicantWithPlan } from "../../models/applicant.model";
 
 export interface IApplicantService {
   registerApplicant(applicantData: CreateApplicantDto): Promise<string>;
@@ -10,7 +10,7 @@ export interface IApplicantService {
     email: string,
     password: string
   ): Promise<{
-    applicant: Omit<IApplicant, "password">;
+    applicant: Omit<IApplicantWithPlan, "password">;
     accessToken: string;
     refreshToken: string;
   }>;
@@ -33,21 +33,27 @@ export interface IApplicantService {
     refreshToken: string;
   }>;
 
-  toggleSaveJobForApplicant(
-    applicantId: string,
-    jobId: string
-  ): Promise<IApplicant | null>;
+  // toggleSaveJobForApplicant(
+  //   applicantId: string,
+  //   jobId: string
+  // ): Promise<IApplicant | null>;
 
-  getApplicantById(applicantId: string): Promise<IApplicant | null>;
+  getApplicantById(applicantId: string): Promise<IApplicantWithPlan | null>;
 
-  unsaveJobForApplicant(
-    applicantId: string,
-    jobId: string
-  ): Promise<IApplicant | null>;
+  // unsaveJobForApplicant(
+  //   applicantId: string,
+  //   jobId: string
+  // ): Promise<IApplicant | null>;
 
   refreshToken(oldToken: string): Promise<{
     newAccessToken: string;
     newRefreshToken: string;
     applicant: Omit<IApplicant, "password">;
   }>;
+
+  addJobToApplicant(
+    applicantId: string,
+    jobId: string
+  ): Promise<IApplicantWithPlan | null>;
+
 }

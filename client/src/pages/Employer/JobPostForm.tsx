@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateJobMutation } from "../../api/endpoints/jobApi";
 import { toast } from "react-toastify";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router";
+
+import { useCreateJobMutation } from "../../api/endpoints/jobApi";
 
 const jobFormSchema = z.object({
   title: z.string().min(1, "Job title is required"),
@@ -20,6 +20,9 @@ const jobFormSchema = z.object({
   educationRequirements: z
     .array(z.string().min(1, "At least one education requirement is required"))
     .optional(),
+  responsibilities: z
+    .array(z.string().min(1, "At least one education requirement is required"))
+    .optional(),
   location: z.enum(["remote", "hybrid", "onsite"]),
   deadline: z.string().optional(),
   skillsRequired: z
@@ -32,6 +35,7 @@ type JobFormData = z.infer<typeof jobFormSchema>;
 
 const JobPostForm: React.FC = () => {
   const [createJob, { isLoading }] = useCreateJobMutation();
+  const [responsibilities, setResponsibilities] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [educationRequirements, setEducationRequirements] = useState<string[]>(
     []
@@ -52,6 +56,7 @@ const JobPostForm: React.FC = () => {
       jobType: "full-time",
       experienceLevel: "entry",
       educationRequirements: [],
+      responsibilities: [],
       location: "remote",
       deadline: "",
       skillsRequired: [],
@@ -107,31 +112,38 @@ const JobPostForm: React.FC = () => {
     ); // Update skillsRequired field after deletion
   };
 
-  const onSubmit = async (data: JobFormData) => {
-    try {
-      console.log(data);
-      const result = await createJob(data).unwrap();
-      console.log("Job successfully posted:", result);
-      toast.success("Job successfully posted!");
-      navigate("/employer/posted-jobs");
-    } catch (error: unknown) {
-      let errorMessage = "Something went wrong.";
-
-      if (typeof error === "object" && error !== null && "status" in error) {
-        const err = error as FetchBaseQueryError;
-
-        if ("data" in err) {
-          if (typeof err.data === "string") {
-            errorMessage = err.data;
-          } else if (typeof err.data === "object" && err.data !== null) {
-            errorMessage =
-              (err.data as { message?: string }).message || errorMessage;
-          }
-        }
+  // Responsibilities Add/Remove
+  const handleResponsibilityAdd = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const responsibility = (e.target as HTMLInputElement).value.trim();
+      if (responsibility && !responsibilities.includes(responsibility)) {
+        setResponsibilities((prev) => {
+          const updatedResponsibilities = [...prev, responsibility];
+          setValue("responsibilities", updatedResponsibilities);
+          return updatedResponsibilities;
+        });
+        (e.target as HTMLInputElement).value = "";
       }
-
-      toast.error(errorMessage);
     }
+  };
+
+  const handleResponsibilityDelete = (responsibilityToDelete: string) => {
+    setResponsibilities(
+      responsibilities.filter((resp) => resp !== responsibilityToDelete)
+    );
+    setValue(
+      "responsibilities",
+      responsibilities.filter((resp) => resp !== responsibilityToDelete)
+    );
+  };
+
+  const onSubmit = async (data: JobFormData) => {
+    console.log(data);
+    const result = await createJob(data).unwrap();
+    console.log("Job successfully posted:", result);
+    toast.success("Job successfully posted!");
+    navigate("/employer/posted-jobs");
   };
 
   return (
@@ -261,6 +273,41 @@ const JobPostForm: React.FC = () => {
           )}
         </div>
 
+        {/* Responsibilities */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Responsibilities
+          </label>
+          <input
+            type="text"
+            onKeyDown={handleResponsibilityAdd}
+            placeholder="Press Enter to add responsibility"
+            className="mt-1 w-full text-gray-700 border border-gray-300 rounded-md p-2"
+          />
+          <div className="flex flex-wrap gap-2 mb-2 mt-2">
+            {responsibilities.map((responsibility) => (
+              <span
+                key={responsibility}
+                className="bg-blue-500 text-white py-1 px-3 rounded-full flex items-center space-x-2"
+              >
+                <span>{responsibility}</span>
+                <button
+                  type="button"
+                  onClick={() => handleResponsibilityDelete(responsibility)}
+                  className="text-white hover:text-gray-200"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
+          {errors.responsibilities && (
+            <p className="text-red-500 text-sm">
+              {errors.responsibilities.message}
+            </p>
+          )}
+        </div>
+
         {/* Education Requirements */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -312,7 +359,7 @@ const JobPostForm: React.FC = () => {
             {skills.map((skill) => (
               <span
                 key={skill}
-                className="bg-blue-500 text-white py-1 px-3 rounded-full flex items-center space-x-2"
+                className="bg-green-500 text-white py-1 px-3 rounded-full flex items-center space-x-2"
               >
                 <span>{skill}</span>
                 <button
@@ -382,11 +429,11 @@ const JobPostForm: React.FC = () => {
         </div>
 
         {/* Submit */}
-        <div>
+        <div className="text-center">
           <button
             disabled={isLoading}
             type="submit"
-            className="w-full bg-[rgb(88,81,211)] hover:bg-[rgb(72,67,180)] text-white font-semibold py-2 px-4 rounded-md transition duration-200"
+            className="bg-[#5FACEB] hover:bg-[rgb(72,67,180)] text-white font-semibold py-2 px-4 rounded-md transition duration-200"
           >
             Post Job
           </button>

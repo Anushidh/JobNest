@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+
 import { TYPES } from "../app/types";
 import { EmployerRepository } from "../repositories/employer.repository";
 import { container } from "../app/container";
+import { IEmployer, IEmployerWithPlan } from "../models/employer.model";
 
+
+// Authenticated request (always use this across middleware)
 export interface AuthenticatedEmployerRequest extends Request {
-  employer?: {
-    id: string;
-    role: string;
-    companyName: string;
-  };
+  employer?: IEmployerWithPlan
 }
 
 export const employerAuthMiddleware = async (
@@ -86,12 +86,7 @@ export const employerAuthMiddleware = async (
       return;
     }
 
-    // 7. Attach employer to request
-    req.employer = {
-      id: employer._id.toString(),
-      role: "employer",
-      companyName: employer.companyName,
-    };
+    req.employer = employer
 
     console.log("[DEBUG] Employer authenticated:", req.employer);
     next();

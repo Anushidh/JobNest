@@ -86,12 +86,12 @@ export class AdminController extends BaseHttpController {
     res.status(200).json(applicants);
   }
 
-  @httpPatch("/applicants/:id/block-status")
-  async toggleApplicantBlockStatus(req: Request, res: Response) {
-    const { id } = req.params;
-    const updatedApplicant = await this.applicantService.toggleBlockStatus(id);
-    res.status(200).json(updatedApplicant);
-  }
+  // @httpPatch("/applicants/:id/block-status")
+  // async toggleApplicantBlockStatus(req: Request, res: Response) {
+  //   const { id } = req.params;
+  //   const updatedApplicant = await this.applicantService.toggleBlockStatus(id);
+  //   res.status(200).json(updatedApplicant);
+  // }
 
   @httpPatch("/employers/:id/block-status")
   async toggleEmployerBlockStatus(req: Request, res: Response) {
