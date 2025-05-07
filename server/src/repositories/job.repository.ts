@@ -3,6 +3,7 @@ import Job, { IJob } from "../models/job.model";
 import { IJobRepository } from "./interfaces/IJobRepository";
 import { Types } from "mongoose";
 import { AppError } from "../utils/error.util";
+import Application from "../models/application.model";
 
 @injectable()
 export class JobRepository implements IJobRepository {
@@ -59,11 +60,11 @@ export class JobRepository implements IJobRepository {
     page: number,
     limit: number,
     search: string,
-    filters: Record<string, string[]> = {}  // Make sure filters is typed properly here too
+    filters: Record<string, string[]> = {} // Make sure filters is typed properly here too
   ): Promise<IJob[]> {
     try {
       const query: Record<string, any> = { status: "active" };
-  
+
       // If there's a search query, filter by title, skills, or company
       if (search) {
         query["$or"] = [
@@ -72,19 +73,19 @@ export class JobRepository implements IJobRepository {
           { company: { $regex: search, $options: "i" } }, // Search in company name
         ];
       }
-  
+
       if (filters.jobType?.length) {
         query.jobType = { $in: filters.jobType };
       }
-    
+
       if (filters.location?.length) {
         query.location = { $in: filters.location };
       }
-    
+
       if (filters.experienceLevel?.length) {
         query.experienceLevel = { $in: filters.experienceLevel };
       }
-  
+
       return await Job.find(query)
         .skip((page - 1) * limit)
         .limit(limit)
@@ -94,7 +95,6 @@ export class JobRepository implements IJobRepository {
       this.handleDatabaseError(error);
     }
   }
-  
 
   async findByIds(ids: string[]): Promise<IJob[]> {
     try {
@@ -120,5 +120,32 @@ export class JobRepository implements IJobRepository {
       console.log("inside catch block of addApplication", error);
       this.handleDatabaseError(error);
     }
+  }
+
+  async countAllByEmployer(employerId: string): Promise<number> {
+    return Job.countDocuments({ employer: employerId });
+  }
+
+  async countByEmployerAndStatus(
+    employerId: string,
+    status: string
+  ): Promise<number> {
+    return Job.countDocuments({ employer: employerId, status });
+  }
+
+  async countApplicationsByEmployer(employerId: string): Promise<number> {
+    const jobs = await Job.find({ employer: employerId }, "applications");
+    return jobs.reduce((sum, job) => sum + job.applications.length, 0);
+  }
+
+  async countApplicationsByEmployerAndStatus(
+    employerId: string,
+    status: string
+  ): Promise<number> {
+    // Assuming you have an Application model with job reference
+    return Application.countDocuments({
+      job: { $in: await Job.find({ employer: employerId }).distinct("_id") },
+      status,
+    });
   }
 }

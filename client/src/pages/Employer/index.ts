@@ -7,3 +7,4 @@ export { default as PostedJobs } from "./PostedJobs";
 export { default as JobPostForm } from "./JobPostForm";
 export { default as EditJobForm } from "./EditJobForm";
 export { default as EmployerPlans } from "./EmployerPlans";
+export { default as JobApplications } from "./JobApplications";

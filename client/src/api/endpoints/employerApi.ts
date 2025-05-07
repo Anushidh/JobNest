@@ -77,6 +77,9 @@ export const employerApi = baseApi.injectEndpoints({
         method: "POST",
       }),
     }),
+    getEmployerStats: builder.query({
+      query: () => "/employer/stats",
+    }),
   }),
 });
 
@@ -93,4 +96,5 @@ export const {
   useRefreshTokenMutation,
   useUploadLogoMutation,
   useTestQuery,
+  useGetEmployerStatsQuery,
 } = employerApi;

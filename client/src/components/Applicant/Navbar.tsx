@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../../app/store";
-import { logout as applicantLogout } from "../../redux/slices/applicantSlice";
 import { useState } from "react";
 import { Bell, Menu, X } from "lucide-react";
 
+import { RootState } from "../../app/store";
+import { logout as applicantLogout } from "../../redux/slices/applicantSlice";
 import { useApplicantLogoutMutation } from "../../api/endpoints/applicantApi";
 
 const Navbar = () => {
@@ -21,12 +21,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  const navLinks = [
-    "Dashboard",
-    "View Jobs",
-    "Messages",
-    "Plans",
-  ];
+  const navLinks = ["Dashboard", "View Jobs", "Messages", "Plans"];
 
   const handleLogout = async () => {
     await logout({ applicantId: applicant?._id }).unwrap();
@@ -65,11 +60,12 @@ const Navbar = () => {
               />
               <div className="absolute right-0 mt-2 bg-white border shadow-md rounded opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-10">
                 <Link
-                  to="/settings"
+                  to="/profile"
                   className="block px-4 py-2 hover:bg-gray-100"
                 >
-                  Settings
+                  Profile
                 </Link>
+
                 <button
                   className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                   onClick={handleLogout}
@@ -124,6 +120,7 @@ const Navbar = () => {
               <Link to="/settings" onClick={toggleMenu}>
                 Settings
               </Link>
+              <Link to="/profile">Profile</Link>
               <button onClick={handleLogout}>Logout</button>
             </>
           ) : (

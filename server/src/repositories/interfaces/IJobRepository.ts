@@ -14,4 +14,11 @@ export interface IJobRepository {
   ): Promise<IJob[]>;
   findByIds(ids: string[]): Promise<IJob[]>;
   addApplication(jobId: string, applicantId: string): Promise<IJob | null>;
+  countAllByEmployer(employerId: string): Promise<number>;
+  countByEmployerAndStatus(employerId: string, status: string): Promise<number>;
+  countApplicationsByEmployer(employerId: string): Promise<number>;
+  countApplicationsByEmployerAndStatus(
+    employerId: string,
+    status: string
+  ): Promise<number>;
 }

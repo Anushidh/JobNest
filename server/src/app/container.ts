@@ -11,6 +11,8 @@ import { EmployerPlanRepository } from "../repositories/employer-plan.repository
 import { AdminService } from "../services/admin.service";
 import { AdminRepository } from "../repositories/admin.repository";
 import { ApplicantPlanRepository } from "../repositories/applicant-plan.repository";
+import { ApplicationRepository } from "../repositories/application.repository";
+import { ApplicationService } from "../services/application.service";
 // import { PaymentRepository } from "../repositories/payment.repository";
 // import { PaymentService } from "../services/payment.service";
 
@@ -32,6 +34,9 @@ container
 container
   .bind<ApplicantPlanRepository>(TYPES.ApplicantPlanRepository)
   .to(ApplicantPlanRepository);
+container
+  .bind<ApplicationRepository>(TYPES.ApplicationRepository)
+  .to(ApplicationRepository);
 container.bind<AdminRepository>(TYPES.AdminRepository).to(AdminRepository);
 // container
 //   .bind<PaymentRepository>(TYPES.PaymentRepository)
@@ -43,6 +48,9 @@ container.bind<JobService>(TYPES.JobService).to(JobService);
 container.bind<ApplicantService>(TYPES.ApplicantService).to(ApplicantService);
 container.bind<PlanService>(TYPES.PlanService).to(PlanService);
 container.bind<AdminService>(TYPES.AdminService).to(AdminService);
+container
+  .bind<ApplicationService>(TYPES.ApplicationService)
+  .to(ApplicationService);
 // container.bind<PaymentService>(TYPES.PaymentService).to(PaymentService);
 
 // ✅ Bind Middleware

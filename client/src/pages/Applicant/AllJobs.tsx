@@ -159,14 +159,8 @@ const AllJobs = () => {
         ) : (
           <>
             {jobs.map((job: Job) => {
-              const hasApplied = job.applications.includes(applicantId);
               return (
-                <MainJobCard
-                  key={job._id}
-                  job={job}
-                  hasApplied={hasApplied}
-                  onApplied={refetch}
-                />
+                <MainJobCard key={job._id} job={job} onApplied={refetch} />
               );
             })}
 

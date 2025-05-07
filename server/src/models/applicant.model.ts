@@ -13,7 +13,6 @@ export interface IApplicant extends Document {
   skills: string[];
   experience?: "entry" | "mid" | "senior" | "lead";
   education?: string[];
-  appliedJobs: mongoose.Types.ObjectId[];
   savedJobs: mongoose.Types.ObjectId[];
   role: "applicant";
   isBlocked: boolean;
@@ -92,13 +91,6 @@ const applicantSchema: Schema<IApplicant> = new Schema(
       type: [String],
       default: undefined, // Makes the array optional
     },
-    appliedJobs: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Job",
-        default: [],
-      },
-    ],
     savedJobs: [
       {
         type: Schema.Types.ObjectId,

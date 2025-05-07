@@ -40,13 +40,33 @@ export class JobService implements IJobService {
     page: number = 1,
     limit: number = 10,
     search: string = "",
-    filters: Record<string, string[]> = {}  // Make sure filters is typed properly as Record<string, string[]>
+    filters: Record<string, string[]> = {} // Make sure filters is typed properly as Record<string, string[]>
   ): Promise<IJob[]> {
     return this.jobRepository.listActiveJobs(page, limit, search, filters);
   }
-  
-  
-  
+
+  async getEmployerDashboardStats(employerId: string) {
+    const totalJobs = await this.jobRepository.countAllByEmployer(employerId);
+    const activeJobs = await this.jobRepository.countByEmployerAndStatus(
+      employerId,
+      "active"
+    );
+    const totalApplications = await this.jobRepository.countApplicationsByEmployer(
+      employerId
+    );
+    const applicationsInReview =
+      await this.jobRepository.countApplicationsByEmployerAndStatus(
+        employerId,
+        "review"
+      );
+
+    return {
+      totalJobs,
+      activeJobs,
+      totalApplications,
+      applicationsInReview,
+    };
+  }
 
   async getSavedJobs(jobIds: string[]): Promise<IJob[]> {
     if (!jobIds || jobIds.length === 0) {

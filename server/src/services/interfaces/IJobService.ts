@@ -19,4 +19,10 @@ export interface IJobService {
     filters: JobFilter
   ): Promise<IJob[]>;
   applyForJob(jobId: string, applicantId: string): Promise<IJob | null>;
+  getEmployerDashboardStats(employerId: string): Promise<{
+    totalJobs: number;
+    activeJobs: number;
+    totalApplications: number;
+    applicationsInReview: number;
+  }>;
 }

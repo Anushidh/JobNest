@@ -14,6 +14,7 @@ import {
   PostedJobs,
   EditJobForm,
   EmployerPlans,
+  JobApplications,
 } from "../pages/Employer";
 
 const ProtectedRoute = () => {
@@ -43,6 +44,7 @@ const EmployerRoutes = () => {
           <Route path="post-job" element={<JobPostForm />} />
           <Route path="edit-job/:jobId" element={<EditJobForm />} />
           <Route path="posted-jobs" element={<PostedJobs />} />
+          <Route path="applications/:jobId" element={<JobApplications />} />
           <Route path="plans" element={<EmployerPlans />} />
         </Route>
       </Route>

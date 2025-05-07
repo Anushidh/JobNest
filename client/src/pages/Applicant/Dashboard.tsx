@@ -4,7 +4,7 @@ import TalentCard from "../../components/Applicant/TalentCard";
 
 const Dashboard = () => {
   return (
-    <div className="flex px-28 py-8 gap-6 bg-gray-100">
+    <div className="flex px-28 py-8 gap-6 bg-gray-100 min-h-screen">
       {/* Left Section (Main Dashboard) */}
       <div className="w-full  bg-gray-100 rounded-lg">
         {/* Conversations */}

@@ -41,6 +41,17 @@ export const jobApi = baseApi.injectEndpoints({
       }),
     }),
 
+    getApplicationsForJob: builder.query({
+      query: (jobId: string) => `/jobs/applications/${jobId}`,
+    }),
+
+    toggleApplicationStatus: builder.mutation({
+      query: (applicationId: string) => ({
+        url: `/jobs/${applicationId}/toggle-status`,
+        method: "PATCH",
+      }),
+    }),
+    
     // ---------------- Applicant APIs ----------------
 
     // List all jobs (with pagination)
@@ -118,6 +129,8 @@ export const {
   useGetJobQuery,
   useUpdateJobMutation,
   useDeleteJobMutation,
+  useGetApplicationsForJobQuery,
+  useToggleApplicationStatusMutation,
   useListJobsQuery,
   useToggleSaveJobForApplicantMutation,
   useGetSavedJobsQuery,

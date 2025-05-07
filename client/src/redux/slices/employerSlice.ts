@@ -37,9 +37,9 @@ const employerSlice = createSlice({
     updateEmployer: (state, action: PayloadAction<Employer>) => {
       state.employer = action.payload;
     },
-    
   },
 });
 
-export const { setEmployerCredentials, logout, updateEmployer } = employerSlice.actions;
+export const { setEmployerCredentials, logout, updateEmployer } =
+  employerSlice.actions;
 export default employerSlice.reducer;

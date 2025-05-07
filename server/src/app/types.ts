@@ -12,6 +12,8 @@ const TYPES = {
   PaymentRepository: Symbol.for("PaymentRepository"),
   AdminService: Symbol.for("AdminService"),
   AdminRepository: Symbol.for("AdminRepository"),
+  ApplicationService: Symbol.for("ApplicationService"),
+  ApplicationRepository: Symbol.for("ApplicationRepository"),
   employerAuthMiddleware: Symbol.for("employerAuthMiddleware"),
 };
 

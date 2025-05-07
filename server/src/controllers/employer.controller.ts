@@ -4,6 +4,7 @@ import { inject } from "inversify";
 import {
   BaseHttpController,
   controller,
+  httpGet,
   httpPost,
   httpPut,
 } from "inversify-express-utils";
@@ -19,6 +20,7 @@ import {
 } from "../middlewares/employer-auth.middleware";
 
 import { storage } from "../config/cloudinaryStorage.config";
+import { JobService } from "../services/job.service";
 
 const upload = multer({ storage });
 
@@ -27,7 +29,8 @@ export class EmployerController extends BaseHttpController {
   private client: OAuth2Client;
   constructor(
     @inject(TYPES.EmployerService)
-    private employerService: EmployerService
+    private employerService: EmployerService,
+    @inject(TYPES.JobService) private jobService: JobService
   ) {
     super();
     this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -84,6 +87,9 @@ export class EmployerController extends BaseHttpController {
   @httpPost("/google-signup")
   async googleSignup(req: Request, res: Response) {
     const { token } = req.body; // ✅ Get token from frontend
+    if (typeof token !== "string") {
+      return res.status(400).json({ message: "Invalid token format" });
+    }
 
     if (!token) {
       return res.status(400).json({ message: "Missing token" });
@@ -245,5 +251,16 @@ export class EmployerController extends BaseHttpController {
       message: "Logo uploaded successfully",
       user: updatedEmployer,
     });
+  }
+
+  @httpGet("/stats", employerAuthMiddleware)
+  public async getDashboardStats(
+    req: AuthenticatedEmployerRequest,
+    res: Response
+  ) {
+    const employerId = req.employer?.id; // Assuming AuthMiddleware adds this
+    const stats = await this.jobService.getEmployerDashboardStats(employerId);
+    console.log(stats);
+    return res.status(200).json(stats);
   }
 }

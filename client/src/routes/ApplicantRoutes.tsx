@@ -14,6 +14,7 @@ import {
   JobDetail,
   OtpForm,
   Plans,
+  ProfilePage,
 } from "../pages/Applicant";
 import PublicRoute from "../pages/Applicant/PublicRoute";
 
@@ -37,7 +38,9 @@ const Applicant = () => {
         <Route path="" element={<Home />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<EditApplicantProfile />} />
+          {/* <Route path="/profile" element={<EditApplicantProfile />} /> */}
+          <Route path="/profile" element={<ProfilePage />} />
+
           <Route path="/view-jobs" element={<AllJobs />} />
           <Route path="/job/:jobId" element={<JobDetail />} />
           <Route path="/plans" element={<Plans />} />

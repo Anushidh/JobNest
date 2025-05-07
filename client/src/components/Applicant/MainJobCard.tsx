@@ -6,16 +6,13 @@ import { Link } from "react-router";
 
 const MainJobCard = ({
   job,
-  hasApplied,
   onApplied,
 }: {
   job: Job;
-  hasApplied: boolean;
   onApplied: () => void;
 }) => {
   const [applyForJob] = useApplyForJobMutation();
   const handleApply = async () => {
-    if (hasApplied) return;
     await applyForJob({ jobId: job._id }).unwrap();
     toast.success("Job application submitted!");
     onApplied();
@@ -39,10 +36,9 @@ const MainJobCard = ({
         <div className="flex gap-2">
           <button
             onClick={handleApply}
-            disabled={hasApplied}
             className="text-sm font-semibold bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 disabled:opacity-50"
           >
-            {hasApplied ? "Applied" : "Apply Now"}
+            "Apply Now"
           </button>
 
           {/* <button

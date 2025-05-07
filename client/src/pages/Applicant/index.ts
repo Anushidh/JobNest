@@ -9,3 +9,4 @@ export { default as Plans } from "./Plans";
 export { default as OtpForm } from "./OtpForm";
 export { default as JobDetail } from "./JobDetail";
 export { default as EditApplicantProfile } from "./EditApplicantProfile";
+export { default as ProfilePage } from "./ProfilePage";

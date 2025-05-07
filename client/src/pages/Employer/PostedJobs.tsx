@@ -15,7 +15,7 @@ const PostedJobs = () => {
     isLoading,
     isError,
     error,
-    refetch
+    refetch,
   } = useGetEmployerJobsQuery();
   const [deleteJob] = useDeleteJobMutation();
   const MySwal = withReactContent(Swal);
@@ -34,7 +34,7 @@ const PostedJobs = () => {
     if (result.isConfirmed) {
       await deleteJob(jobId).unwrap();
       toast.success("Job deleted successfully");
-      refetch()
+      refetch();
     }
   };
 
@@ -89,8 +89,20 @@ const PostedJobs = () => {
                   {job.status}
                 </td>
                 <td className="p-2 border text-center">
-                  {job.applications?.length || 0}
+                  {job.applications?.length > 0 ? (
+                    <button
+                      className="text-blue-600 underline hover:text-blue-800"
+                      onClick={() =>
+                        navigate(`/employer/applications/${job._id}`)
+                      }
+                    >
+                      View
+                    </button>
+                  ) : (
+                    0
+                  )}
                 </td>
+
                 <td className="p-2 border text-center">
                   {job.isFeatured ? "Yes" : "No"}
                 </td>

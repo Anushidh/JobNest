@@ -7,8 +7,9 @@ import {
   httpGet,
   httpPost,
   httpPut,
+  httpPatch,
 } from "inversify-express-utils";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 import { TYPES } from "../app/types";
 import { JobService } from "../services/job.service";
@@ -25,6 +26,7 @@ import {
 import { ApplicantService } from "../services/applicant.service";
 import { PlanService } from "../services/plan.service";
 import { EmployerService } from "../services/employer.service";
+import { ApplicationService } from "../services/application.service";
 import { employerPlanCheckMiddleware } from "../middlewares/employer.plan-check.middleware";
 import { applicantPlanCheckMiddleware } from "../middlewares/applicant.plan-check.middleware";
 
@@ -38,7 +40,9 @@ export class JobController extends BaseHttpController {
     @inject(TYPES.EmployerService)
     private employerService: EmployerService,
     @inject(TYPES.PlanService)
-    private planService: PlanService
+    private planService: PlanService,
+    @inject(TYPES.ApplicationService)
+    private applicationService: ApplicationService
   ) {
     super();
   }
@@ -148,6 +152,69 @@ export class JobController extends BaseHttpController {
       await employer.save();
     }
     res.status(200).json(jobs);
+  }
+
+  @httpGet("/applications/:jobId", employerAuthMiddleware)
+  async getApplicationsForJob(
+    req: AuthenticatedEmployerRequest,
+    res: Response
+  ) {
+    console.log("inside getApplicationsForJob");
+    const jobId = req.params.jobId;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid job ID format" });
+    }
+
+    const job = await this.jobService.getJobById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    const jobObjectId = new Types.ObjectId(jobId);
+
+    // Fetch applications for this job
+    const applications = await this.applicationService.getApplicationsByJob(
+      jobObjectId
+    );
+    console.log(applications);
+    if (applications.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No applications found for this job" });
+    }
+
+    return res.status(200).json(applications);
+  }
+
+  @httpPatch("/:id/toggle-status", employerAuthMiddleware)
+  async toggleApplicationStatus(
+    req: AuthenticatedEmployerRequest,
+    res: Response
+  ) {
+    const appId = req.params.id;
+    const appObjId = new mongoose.Types.ObjectId(appId);
+    const application = await this.applicationService.getApplicationById(
+      appObjId
+    );
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    const currentStatus = application.status;
+
+    if (currentStatus === "pending") {
+      application.status = "accepted";
+    } else if (currentStatus === "accepted") {
+      application.status = "rejected";
+    } else {
+      application.status = "pending";
+    }
+
+    await application.save();
+
+    res
+      .status(200)
+      .json({ message: "Status updated", status: application.status });
   }
 
   @httpGet("/applicant", applicantAuthMiddleware)
@@ -277,7 +344,7 @@ export class JobController extends BaseHttpController {
   @httpPost("/:id/apply", applicantAuthMiddleware, applicantPlanCheckMiddleware)
   async applyForJob(req: AuthenticatedApplicantRequest, res: Response) {
     const jobId = req.params.id;
-    let applicant = req.applicant;
+    const applicant = req.applicant;
 
     if (!applicant) {
       return res
@@ -285,25 +352,38 @@ export class JobController extends BaseHttpController {
         .json({ message: "Unauthorized - Applicant not found" });
     }
 
-    const job = await this.jobService.applyForJob(jobId, applicant.id);
+    const job = await this.jobService.getJobById(jobId); // Assume this gets full job info
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
-
-    const updatedApplicant = await this.applicantService.addJobToApplicant(
-      applicant.id,
-      jobId
-    );
-    if (!updatedApplicant) {
-      return res.status(404).json({ message: "Applicant not found" });
+    const jobObjectId = new Types.ObjectId(jobId);
+    const alreadyApplied =
+      await this.applicationService.checkDuplicateApplication(
+        applicant._id,
+        jobObjectId
+      );
+    if (alreadyApplied) {
+      return res
+        .status(400)
+        .json({ message: "You have already applied for this job" });
     }
-    if (updatedApplicant.applicationsLeft !== "unlimited") {
-      updatedApplicant.applicationsLeft = updatedApplicant.applicationsLeft - 1;
-      await updatedApplicant.save();
-    }
-    applicant = updatedApplicant;
 
-    res.status(200).json({ job, applicant });
+    const application = await this.applicationService.createApplication({
+      applicant: applicant._id,
+      job: job._id,
+      employer: job.employer, // assuming job has an employer field
+      status: "pending",
+    });
+
+    // Decrease application limit if not unlimited
+    if (applicant.applicationsLeft !== "unlimited") {
+      applicant.applicationsLeft -= 1;
+      await applicant.save();
+    }
+
+    return res
+      .status(201)
+      .json({ message: "Application submitted", application });
   }
 
   @httpGet("/applicant/:id", applicantAuthMiddleware)
